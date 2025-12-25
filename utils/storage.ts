@@ -1,5 +1,5 @@
 
-import { User, Course, Enrollment, ChatMessage } from '../types';
+import { User, Course, Enrollment, ChatMessage, BlogPost } from '../types';
 import { MOCK_USERS, MOCK_COURSES } from '../constants';
 import { createClient } from '@supabase/supabase-js';
 
@@ -7,6 +7,7 @@ const USERS_KEY = 'akwaba_db_users_v4';
 const COURSES_KEY = 'akwaba_db_courses_v4';
 const ENROLLMENTS_KEY = 'akwaba_db_enrollments_v4';
 const MESSAGES_KEY = 'akwaba_db_messages_v4';
+const BLOG_KEY = 'akwaba_db_blog_v4';
 
 // Initialisation de Supabase via les variables d'environnement
 // Note: Dans un environnement Vite, on utilise import.meta.env

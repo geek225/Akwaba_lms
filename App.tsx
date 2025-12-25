@@ -40,14 +40,22 @@ const App: React.FC = () => {
   };
 
   const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
     setCurrentUser(null);
     localStorage.removeItem('akwaba_session');
     setCurrentView('home');
     setSelectedCourse(null);
+    setShowLogoutConfirm(false);
   };
 
   const renderContent = () => {
     if (currentView === 'auth') return <AuthView onLogin={handleLogin} />;
+    if (currentView === 'contact') return <ContactView />;
+    if (currentView === 'blog') return <BlogView currentUser={currentUser} onEdit={() => setCurrentView('blog_editor')} />;
+    if (currentView === 'blog_editor' && currentUser) return <BlogEditor currentUser={currentUser} onClose={() => setCurrentView('blog')} />;
     
     if (currentView === 'home') return (
         <Home 
@@ -75,7 +83,7 @@ const App: React.FC = () => {
       case UserRole.STUDENT:
         return <StudentDashboard initialCourse={selectedCourse} currentUser={currentUser} />;
       default:
-        return <Home onSelectCourse={() => setCurrentView('dashboard')} />;
+        return <Home onSelectCourse={() => setCurrentView('dashboard')} currentUser={currentUser} onNavigateToAuth={() => setCurrentView('auth')} />;
     }
   };
 
