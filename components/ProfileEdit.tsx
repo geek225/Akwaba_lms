@@ -4,9 +4,9 @@ import { storage } from '../utils/storage';
 import { supabase } from '../utils/supabaseClient';
 import { Save, User as UserIcon, MapPin, Phone, Mail, Info, Image as ImageIcon } from 'lucide-react';
 
-const ProfileEdit: React.FC<{ userId: string }> = ({ userId }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [formData, setFormData] = useState<Partial<User>>({});
+const ProfileEdit: React.FC<{ userId: string; initialUser?: User }> = ({ userId, initialUser }) => {
+  const [user, setUser] = useState<User | null>(initialUser || null);
+  const [formData, setFormData] = useState<Partial<User>>(initialUser || {});
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -15,8 +15,12 @@ const ProfileEdit: React.FC<{ userId: string }> = ({ userId }) => {
     if (u) {
       setUser(u);
       setFormData(u);
+    } else if (initialUser) {
+        // Fallback to initialUser if not found in storage (e.g. hardcoded admin)
+        setUser(initialUser);
+        setFormData(initialUser);
     }
-  }, [userId]);
+  }, [userId, initialUser]);
 
   const handleSave = async () => {
     if (!formData.name || !formData.firstName) return alert("Le nom et le prénom sont requis.");

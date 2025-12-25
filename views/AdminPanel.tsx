@@ -162,7 +162,7 @@ const AdminPanel: React.FC<{ currentUser: User }> = ({ currentUser }) => {
       </div>
 
       {activeTab === 'profile' ? (
-        <ProfileEdit userId={currentUserId} />
+        <ProfileEdit userId={currentUserId} initialUser={currentUser} />
       ) : activeTab === 'codes' ? (
         <div className="grid lg:grid-cols-3 gap-12">
             <div className="lg:col-span-1 bg-white p-12 rounded-[56px] shadow-2xl border border-gray-50 h-fit">

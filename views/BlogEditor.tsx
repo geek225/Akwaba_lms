@@ -129,7 +129,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({ currentUser, onClose }) => {
 
     // --- VIEW: EDITOR ---
     return (
-        <div className="fixed inset-0 bg-white z-50 flex flex-col animate-in slide-in-from-bottom-10 duration-500">
+        <div className="fixed inset-0 bg-[#FAFAFA] z-50 flex flex-col animate-in slide-in-from-bottom-10 duration-500">
             {/* Top Bar */}
             <div className="h-20 border-b border-gray-100 flex items-center justify-between px-6 bg-white/80 backdrop-blur z-20 sticky top-0">
                 <div className="flex items-center gap-4">
@@ -152,14 +152,14 @@ const BlogEditor: React.FC<BlogEditorProps> = ({ currentUser, onClose }) => {
 
             <div className="flex-grow flex overflow-hidden">
                 {/* Main Content */}
-                <div className="flex-grow overflow-y-auto">
-                    <div className="max-w-3xl mx-auto py-20 px-8">
+                <div className="flex-grow overflow-y-auto bg-[#FAFAFA] flex justify-center">
+                    <div className="max-w-4xl w-full py-20 px-12 md:px-20 bg-white min-h-full shadow-sm my-8 mx-auto rounded-[4px] border border-gray-100">
                         <textarea
                             ref={titleRef}
                             value={editingPost.title || ''}
                             onChange={e => setEditingPost({...editingPost, title: e.target.value})}
                             placeholder="Titre de l'article"
-                            className="w-full text-5xl md:text-6xl font-black placeholder:text-gray-200 border-none outline-none text-gray-900 resize-none overflow-hidden bg-transparent leading-tight mb-8"
+                            className="w-full text-5xl md:text-6xl font-black placeholder:text-gray-300 border-none outline-none text-gray-900 resize-none overflow-hidden bg-transparent leading-tight mb-8"
                             rows={1}
                         />
                         <textarea
@@ -167,7 +167,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({ currentUser, onClose }) => {
                             value={editingPost.content || ''}
                             onChange={e => setEditingPost({...editingPost, content: e.target.value})}
                             placeholder="Commencez à écrire votre histoire..."
-                            className="w-full text-xl leading-relaxed text-gray-700 placeholder:text-gray-300 border-none outline-none resize-none overflow-hidden bg-transparent min-h-[500px]"
+                            className="w-full text-xl leading-relaxed text-gray-800 placeholder:text-gray-400 border-none outline-none resize-none overflow-hidden bg-transparent min-h-[500px]"
                         />
                     </div>
                 </div>

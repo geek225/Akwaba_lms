@@ -75,7 +75,14 @@ const StudentDashboard: React.FC<{ initialCourse: Course | null, currentUser: Us
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
-          {courses.map(course => (
+          {courses.length === 0 ? (
+            <div className="col-span-full py-20 text-center bg-gray-50 rounded-[48px] border-2 border-dashed border-gray-200">
+               <BookOpen size={64} className="mx-auto text-gray-300 mb-6"/>
+               <h3 className="text-2xl font-black text-gray-400">Aucun cours disponible</h3>
+               <p className="text-gray-400 font-bold mt-2">Vous n'êtes inscrit à aucun cours pour le moment.</p>
+            </div>
+          ) : (
+            courses.map(course => (
             <div key={course.id} onClick={() => handleSelectCourse(course)} className="bg-white rounded-[48px] overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all group cursor-pointer">
               <div className="relative h-56">
                 <img src={course.thumbnail} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
@@ -92,15 +99,24 @@ const StudentDashboard: React.FC<{ initialCourse: Course | null, currentUser: Us
                 </div>
               </div>
             </div>
-          ))}
+          )))}
         </div>
       </div>
     );
   }
 
   // Player view remains mostly the same as previous turn...
+  if (!selectedCourse && activeTab === 'player') {
+      return (
+        <div className="container mx-auto px-4 py-12 text-center">
+            <h2 className="text-2xl font-black text-gray-900">Erreur de chargement du cours</h2>
+            <button onClick={() => setActiveTab('library')} className="mt-4 text-ivoryGreen font-bold underline">Retour à la bibliothèque</button>
+        </div>
+      );
+  }
+
   if (!selectedCourse) return null;
-  const module = selectedCourse.modules[activeIdx] || { title: 'Non défini', description: '', videoUrl: '', videoType: 'url', quiz: [] };
+  const module = selectedCourse.modules[activeIdx] || { title: 'Module en construction', description: 'Contenu à venir.', videoUrl: '', videoType: 'url', quiz: [] };
 
   return (
     <div className="flex flex-col lg:flex-row min-h-[calc(100vh-64px)] bg-gray-50 animate-in slide-in-from-right duration-500">
