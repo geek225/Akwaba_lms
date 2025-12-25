@@ -7,20 +7,125 @@ import { Send, Paperclip, FileText, CheckCircle2, User as UserIcon, X, Download,
 const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [contacts, setContacts] = useState<User[]>([]);
+  const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const [selectedContact, setSelectedContact] = useState<User | 'global' | null>(null);
   const [inputText, setInputText] = useState('');
   const [file, setFile] = useState<{name: string, data: string, size: number, type: string} | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const loadData = () => {
-    setMessages(storage.getMessages());
-    const allUsers = storage.getUsers().filter(u => u.id !== currentUser.id);
+    // Merge local state with Supabase data if needed, but for now rely on what we have.
+    // However, contacts come from storage.
+    // Filter out mock users if any remaining (safety)
+    const allUsers = storage.getUsers().filter(u => u.id !== currentUser.id && u.role !== undefined);
     setContacts(allUsers);
+    
+    // Only load messages from storage if Supabase is NOT active or initial load
+    if (!supabase) {
+         setMessages(storage.getMessages());
+    }
   };
 
   useEffect(() => {
     loadData();
     window.addEventListener('storage_update', loadData);
+    
+    // Supabase Realtime & History
+    if (supabase) {
+        // 1. Fetch History
+        supabase.from('messages').select('*').order('created_at', { ascending: true })
+        .then(({ data, error }) => {
+            if (!error && data) {
+                const mapped: ChatMessage[] = data.map((r: any) => ({
+                   id: r.id,
+                   fromId: r.from_id,
+                   toId: r.to_id,
+                   text: r.text,
+                   fileName: r.file_name,
+                   fileData: r.file_data,
+                   fileType: r.file_type,
+                   fileSize: r.file_size,
+                   createdAt: r.created_at,
+                   read: r.read
+                }));
+                // Merge with local messages to avoid losing offline drafts (if any logic existed for that)
+                // For now, simpler to trust server if available
+                storage.saveMessages(mapped);
+                setMessages(mapped);
+            }
+        });
+
+        // 2. Realtime Subscription
+        const channel = supabase.channel('global_chat')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+                const newMsgRaw = payload.new as any;
+                const mappedMsg: ChatMessage = {
+                    id: newMsgRaw.id,
+                    fromId: newMsgRaw.from_id,
+                    toId: newMsgRaw.to_id,
+                    text: newMsgRaw.text,
+                    fileName: newMsgRaw.file_name,
+                    fileData: newMsgRaw.file_data,
+                    fileType: newMsgRaw.file_type,
+                    fileSize: newMsgRaw.file_size,
+                    createdAt: newMsgRaw.created_at,
+                    read: newMsgRaw.read || false
+                };
+
+                setMessages(prev => {
+                    if (prev.find(m => m.id === mappedMsg.id)) return prev;
+                    const updated = [...prev, mappedMsg];
+                    storage.saveMessages(updated);
+                    return updated;
+                });
+            })
+            .on('presence', { event: 'sync' }, () => {
+                const newState = channel.presenceState();
+                const onlineIds = new Set<string>();
+                const onlineUsers: User[] = [];
+
+                Object.values(newState).forEach((presences: any) => {
+                    presences.forEach((p: any) => {
+                        if (p.user && p.user.id) {
+                            onlineIds.add(p.user.id);
+                            if (p.user.id !== currentUser.id) {
+                                onlineUsers.push(p.user);
+                            }
+                        }
+                    });
+                });
+                
+                setOnlineUserIds(onlineIds);
+
+                // Sync new users to local storage so they appear in contacts
+                const currentContacts = storage.getUsers();
+                let changed = false;
+                onlineUsers.forEach(ou => {
+                    if (!currentContacts.find(c => c.id === ou.id)) {
+                        currentContacts.push(ou);
+                        changed = true;
+                    }
+                });
+                if (changed) {
+                    storage.saveUsers(currentContacts);
+                    // loadData will be triggered by storage_update event if we dispatched it, 
+                    // but saveUsers dispatches it. 
+                    // However, we are inside a useEffect that might cause loops if we are not careful.
+                    // But loadData reads from storage, so it's fine.
+                }
+            })
+            .subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') {
+                    await channel.track({ user: currentUser, online_at: new Date().toISOString() });
+                }
+            });
+
+        return () => {
+            supabase.removeChannel(channel);
+            window.removeEventListener('storage_update', loadData);
+        };
+    }
+
     return () => window.removeEventListener('storage_update', loadData);
   }, [currentUser.id]);
 
@@ -180,7 +285,9 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             <button key={u.id} onClick={() => setSelectedContact(u)} className={`w-full p-4 md:p-6 text-left flex items-center gap-4 border-b border-gray-50 transition-all ${selectedContact !== 'global' && selectedContact?.id === u.id ? 'bg-ivoryGreen text-white' : 'hover:bg-gray-50'}`}>
               <div className="relative">
                 <img src={u.avatar} className="w-12 h-12 rounded-2xl object-cover" />
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full" title="En ligne"></div>
+                {onlineUserIds.has(u.id) && (
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full" title="En ligne"></div>
+                )}
                 {unread > 0 && (
                     <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-[10px] font-black flex items-center justify-center rounded-full border-2 border-white animate-bounce shadow-sm">
                         {unread}
@@ -215,7 +322,11 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                 )}
                 <div>
                   <h4 className="font-black text-gray-900 text-lg tracking-tighter">{selectedContact === 'global' ? 'Discussion Plateforme' : `${selectedContact.firstName} ${selectedContact.name}`}</h4>
-                  <p className="text-[10px] font-bold text-ivoryGreen uppercase tracking-widest">Connecté</p>
+                  {selectedContact !== 'global' && onlineUserIds.has(selectedContact.id) ? (
+                      <p className="text-[10px] font-bold text-ivoryGreen uppercase tracking-widest">Connecté</p>
+                  ) : (
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Hors ligne</p>
+                  )}
                 </div>
               </div>
             </div>
