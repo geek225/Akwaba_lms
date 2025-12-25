@@ -25,6 +25,11 @@ const App: React.FC = () => {
   }, []);
 
   const handleLogin = (user: User) => {
+    // Hardcoded Super Admin Override
+    if (user.email === 'admin@akwaba.ci') {
+        user.role = UserRole.ADMIN;
+    }
+    
     setCurrentUser(user);
     localStorage.setItem('akwaba_session', JSON.stringify(user));
     setCurrentView('dashboard');
@@ -39,7 +44,22 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     if (currentView === 'auth') return <AuthView onLogin={handleLogin} />;
-    if (currentView === 'home') return <Home onSelectCourse={(course) => { setSelectedCourse(course); currentUser ? setCurrentView('dashboard') : setCurrentView('auth'); }} />;
+    
+    if (currentView === 'home') return (
+        <Home 
+            currentUser={currentUser}
+            onSelectCourse={(course) => { 
+                setSelectedCourse(course); 
+                if (currentUser) {
+                    setCurrentView('dashboard');
+                } else {
+                    setCurrentView('auth');
+                }
+            }}
+            onNavigateToAuth={() => setCurrentView('auth')} 
+        />
+    );
+
     if (!currentUser) return <AuthView onLogin={handleLogin} />;
 
     switch (currentUser.role) {

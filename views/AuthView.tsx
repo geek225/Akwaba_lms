@@ -115,24 +115,6 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
             <h2 className="text-5xl font-black mb-6 leading-tight tracking-tighter">Bienvenue.</h2>
             <p className="text-green-100 text-lg font-medium opacity-80 leading-relaxed">Accédez à votre espace d'apprentissage local 100% ivoirien.</p>
           </div>
-          
-          <div className="mt-12 pt-10 border-t border-white/10 relative z-10">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-ivoryOrange mb-6">Accès Rapides (Démo)</h4>
-            <div className="space-y-3">
-              <button onClick={() => fillTestAccount('admin@akwaba.ci')} className="w-full text-left px-4 py-3 bg-white/5 rounded-2xl text-xs font-bold border border-white/5 hover:bg-white/10 flex justify-between items-center transition-all">
-                <span>ADMIN</span>
-                <span className="opacity-40">admin@akwaba.ci</span>
-              </button>
-              <button onClick={() => fillTestAccount('amani@akwaba.ci')} className="w-full text-left px-4 py-3 bg-white/5 rounded-2xl text-xs font-bold border border-white/5 hover:bg-white/10 flex justify-between items-center transition-all">
-                <span>FORMATEUR</span>
-                <span className="opacity-40">amani@akwaba.ci</span>
-              </button>
-              <button onClick={() => fillTestAccount('jean@akwaba.ci')} className="w-full text-left px-4 py-4 bg-ivoryOrange/20 rounded-2xl text-xs font-black border border-ivoryOrange/30 hover:bg-ivoryOrange/40 flex justify-between items-center text-ivoryOrange transition-all shadow-lg">
-                <span>TEST ÉTUDIANT</span>
-                <span className="opacity-60">jean@akwaba.ci</span>
-              </button>
-            </div>
-          </div>
         </div>
 
         <div className="p-16 md:w-3/5 overflow-y-auto max-h-[90vh]">
@@ -207,6 +189,20 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
                     />
                     <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
                   </div>
+                </div>
+
+                <div className="space-y-2 pt-4 border-t border-gray-50">
+                   <label className="text-[10px] font-black text-ivoryOrange uppercase tracking-widest ml-1">Code D'accès (Optionnel)</label>
+                   <p className="text-xs text-gray-400 mb-2 ml-1">Si vous êtes formateur ou administrateur, entrez votre code ici.</p>
+                   <div className="relative">
+                     <input 
+                       type="text" 
+                       placeholder="Code secret..." 
+                       id="accessCode"
+                       className="w-full pl-6 pr-4 py-4 rounded-3xl border-2 border-dashed border-gray-200 bg-gray-50 focus:bg-white focus:border-ivoryOrange outline-none font-bold text-gray-900 text-md shadow-sm transition-all" 
+                     />
+                     <Lock className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
+                   </div>
                 </div>
               </>
             )}

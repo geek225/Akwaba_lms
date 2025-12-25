@@ -1,20 +1,81 @@
-
 import React, { useEffect, useState } from 'react';
-import { Search, ChevronRight, Star, Clock, BookOpen } from 'lucide-react';
+import { Search, ChevronRight, Star, Clock, BookOpen, User as UserIcon } from 'lucide-react';
 import { storage } from '../utils/storage';
-import { Course } from '../types';
+import { Course, User } from '../types';
 
 interface HomeProps {
   onSelectCourse: (course: Course) => void;
+  currentUser: User | null;
+  onNavigateToAuth: () => void;
 }
 
-const Home: React.FC<HomeProps> = ({ onSelectCourse }) => {
+const Home: React.FC<HomeProps> = ({ onSelectCourse, currentUser, onNavigateToAuth }) => {
   const [courses, setCourses] = useState<Course[]>([]);
+  const [enrolledCourseIds, setEnrolledCourseIds] = useState<string[]>([]);
 
   useEffect(() => {
     storage.init();
     setCourses(storage.getCourses().filter(c => !c.isDraft).slice(0, 5));
-  }, []);
+    
+    // Simulate fetching enrollments (In a real app, this comes from Supabase/API)
+    // For now, we assume if we are logged in, we check the enrollments
+    // But since the current 'storage' implementation doesn't easily track per-user enrollments in a relational way locally,
+    // we will check if the user is enrolled in the specific course via local logic or just visually.
+    // For this prototype, let's assume specific courses are enrolled if the user is 'jean@akwaba.ci' or we just track it.
+    
+    // BETTER: Check enrollments from storage if they exist
+    const enrollments = storage.getEnrollments();
+    if (currentUser) {
+        const userEnrollments = enrollments.filter(e => e.userId === currentUser.id).map(e => e.courseId);
+        setEnrolledCourseIds(userEnrollments);
+    }
+  }, [currentUser]);
+
+  const handleCourseAction = (e: React.MouseEvent, course: Course) => {
+    e.stopPropagation();
+    if (!currentUser) {
+        onNavigateToAuth();
+    } else {
+        // If enrolled, continue
+        // If not, also select course (which usually opens details/enrollment page)
+        onSelectCourse(course);
+    }
+  };
+
+  const getActionButton = (course: Course) => {
+    if (!currentUser) {
+        return (
+            <button 
+                onClick={(e) => handleCourseAction(e, course)}
+                className="w-full py-3 bg-ivoryGreen text-white rounded-xl font-bold text-sm hover:bg-green-700 transition-colors"
+            >
+                S'inscrire pour suivre
+            </button>
+        );
+    }
+
+    const isEnrolled = enrolledCourseIds.includes(course.id);
+    
+    if (isEnrolled) {
+        return (
+            <button 
+                onClick={(e) => handleCourseAction(e, course)}
+                className="w-full py-3 bg-ivoryOrange/10 text-ivoryOrange rounded-xl font-bold text-sm hover:bg-ivoryOrange/20 transition-colors"
+            >
+                Continuer le cours
+            </button>
+        );
+    }
+
+    return (
+        <button 
+            onClick={(e) => handleCourseAction(e, course)}
+            className="w-full py-3 bg-ivoryGreen text-white rounded-xl font-bold text-sm hover:bg-green-700 transition-colors shadow-lg shadow-green-100"
+        >
+            Suivre ce cours
+        </button>
+    );
+  };
 
   return (
     <div className="pb-20">
@@ -58,7 +119,7 @@ const Home: React.FC<HomeProps> = ({ onSelectCourse }) => {
           {courses.map(course => (
             <div 
               key={course.id} 
-              className="bg-white rounded-[40px] overflow-hidden shadow-sm border border-gray-50 hover:shadow-2xl hover:-translate-y-2 transition-all group cursor-pointer"
+              className="bg-white rounded-[40px] overflow-hidden shadow-sm border border-gray-50 hover:shadow-2xl hover:-translate-y-2 transition-all group cursor-pointer flex flex-col"
               onClick={() => onSelectCourse(course)}
             >
               <div className="relative h-56">
@@ -67,7 +128,7 @@ const Home: React.FC<HomeProps> = ({ onSelectCourse }) => {
                   {course.category}
                 </div>
               </div>
-              <div className="p-8">
+              <div className="p-8 flex-grow flex flex-col">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="flex text-yellow-500">
                     <Star size={14} fill="currentColor" />
@@ -80,14 +141,18 @@ const Home: React.FC<HomeProps> = ({ onSelectCourse }) => {
                 </div>
                 <h3 className="text-2xl font-black mb-4 leading-tight group-hover:text-ivoryOrange transition-colors">{course.title}</h3>
                 
-                <div className="flex items-center justify-between pt-6 border-t border-gray-50">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-ivoryGreen/10 flex items-center justify-center text-ivoryGreen">
-                      <BookOpen size={14} />
+                <div className="mt-auto space-y-4">
+                    <div className="flex items-center justify-between pt-6 border-t border-gray-50">
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-ivoryGreen/10 flex items-center justify-center text-ivoryGreen">
+                        <BookOpen size={14} />
+                        </div>
+                        <span className="text-xs font-bold text-gray-500">{course.modules.length} Modules</span>
                     </div>
-                    <span className="text-xs font-bold text-gray-500">{course.modules.length} Modules</span>
-                  </div>
-                  <span className="text-xs font-black text-gray-900">PAR {course.instructor.toUpperCase()}</span>
+                    <span className="text-xs font-black text-gray-900 uppercase">PAR {course.instructor}</span>
+                    </div>
+                    
+                    {getActionButton(course)}
                 </div>
               </div>
             </div>
