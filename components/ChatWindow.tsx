@@ -32,10 +32,10 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     
     // Supabase Realtime & History
     if (supabase) {
-        // 1. Fetch History
-        supabase.from('messages').select('*').order('created_at', { ascending: true })
-        .then(({ data, error }) => {
-            if (!error && data) {
+        // 1. Initial Fetch
+        const fetchMessages = async () => {
+             const { data, error } = await supabase!.from('messages').select('*').order('created_at', { ascending: true });
+             if (!error && data) {
                 const mapped: ChatMessage[] = data.map((r: any) => ({
                    id: r.id,
                    fromId: r.from_id,
@@ -48,12 +48,26 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                    createdAt: r.created_at,
                    read: r.read
                 }));
-                // Merge with local messages to avoid losing offline drafts (if any logic existed for that)
-                // For now, simpler to trust server if available
-                storage.saveMessages(mapped);
-                setMessages(mapped);
-            }
-        });
+                // Merge strategies could be complex, but for simplicity we assume server is truth.
+                // However, we must preserve optimistic updates that are not yet on server?
+                // Actually, if we just append new ones, it's safer.
+                setMessages(prev => {
+                    // Create a map of existing IDs for fast lookup
+                    const existingIds = new Set(prev.map(m => m.id));
+                    const newMessages = mapped.filter(m => !existingIds.has(m.id));
+                    if (newMessages.length === 0) return prev;
+                    
+                    const updated = [...prev, ...newMessages].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+                    storage.saveMessages(updated);
+                    return updated;
+                });
+             }
+        };
+
+        fetchMessages();
+        
+        // Polling fallback (every 5 seconds) to ensure messages are received even if Realtime fails
+        const intervalId = setInterval(fetchMessages, 5000);
 
         // 2. Realtime Subscription
         const channel = supabase.channel('global_chat')
@@ -108,10 +122,6 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                 });
                 if (changed) {
                     storage.saveUsers(currentContacts);
-                    // loadData will be triggered by storage_update event if we dispatched it, 
-                    // but saveUsers dispatches it. 
-                    // However, we are inside a useEffect that might cause loops if we are not careful.
-                    // But loadData reads from storage, so it's fine.
                 }
             })
             .subscribe(async (status) => {
@@ -121,7 +131,8 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             });
 
         return () => {
-            supabase.removeChannel(channel);
+            clearInterval(intervalId);
+            supabase!.removeChannel(channel);
             window.removeEventListener('storage_update', loadData);
         };
     }
@@ -202,17 +213,16 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
         }
     }
 
-    if (!sentViaSupabase) {
-        // Fallback LocalStorage
-        const newMessage: ChatMessage = {
-            id: `m-${Date.now()}`,
-            ...newMessageBase,
-            read: false
-        };
-        const all = storage.getMessages();
-        storage.saveMessages([...all, newMessage]);
-        setMessages([...messages, newMessage]); // Update local state immediately
-    }
+    // Always update local state immediately (Optimistic Update)
+    // We use a temp ID that might be replaced later or deduplicated
+    const newMessage: ChatMessage = {
+        id: sentViaSupabase ? `m-${Date.now()}` : `m-${Date.now()}`, // Temporary ID
+        ...newMessageBase,
+        read: false
+    };
+    const all = storage.getMessages();
+    storage.saveMessages([...all, newMessage]);
+    setMessages([...messages, newMessage]); 
 
     setInputText('');
     setFile(null);
