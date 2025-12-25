@@ -9,9 +9,11 @@ interface NavbarProps {
   onGoHome: () => void;
   onGoDashboard: () => void;
   onGoAuth: () => void;
+  onGoContact: () => void;
+  onGoBlog: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ currentUser, onLogout, onGoHome, onGoDashboard, onGoAuth }) => {
+const Navbar: React.FC<NavbarProps> = ({ currentUser, onLogout, onGoHome, onGoDashboard, onGoAuth, onGoContact, onGoBlog }) => {
   return (
     <nav className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-50 px-4 py-3">
       <div className="container mx-auto flex items-center justify-between">
