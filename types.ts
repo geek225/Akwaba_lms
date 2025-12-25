@@ -57,6 +57,7 @@ export interface ChatMessage {
   fileType?: string;
   fileSize?: number;
   createdAt: string;
+  read?: boolean;
 }
 
 export interface QuizQuestion {

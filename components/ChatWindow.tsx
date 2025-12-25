@@ -25,8 +25,26 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
   }, [currentUser.id]);
 
   useEffect(() => {
+    if (selectedContact && selectedContact !== 'global') {
+        const unreadMsgs = messages.filter(m => m.fromId === selectedContact.id && m.toId === currentUser.id && !m.read);
+        if (unreadMsgs.length > 0) {
+            const updatedMessages = messages.map(m => {
+                if (m.fromId === selectedContact.id && m.toId === currentUser.id && !m.read) {
+                    return { ...m, read: true };
+                }
+                return m;
+            });
+            storage.saveMessages(updatedMessages);
+            setMessages(updatedMessages);
+        }
+    }
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, selectedContact]);
+
+  const getUnreadCount = (contactId: string) => {
+    return messages.filter(m => m.fromId === contactId && m.toId === currentUser.id && !m.read).length;
+  };
+
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -40,13 +58,12 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     }
   };
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!inputText.trim() && !file) return;
     const toId = selectedContact === 'global' ? 'global' : selectedContact?.id;
     if (!toId) return;
 
-    const newMessage: ChatMessage = {
-      id: `m-${Date.now()}`,
+    const newMessageBase = {
       fromId: currentUser.id,
       toId,
       text: inputText,
@@ -57,8 +74,37 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
       createdAt: new Date().toISOString()
     };
 
-    const all = storage.getMessages();
-    storage.saveMessages([...all, newMessage]);
+    if (supabase) {
+        // Envoi vers Supabase
+        const { error } = await supabase.from('messages').insert({
+            from_id: newMessageBase.fromId,
+            to_id: newMessageBase.toId,
+            text: newMessageBase.text,
+            file_name: newMessageBase.fileName,
+            file_data: newMessageBase.fileData,
+            file_type: newMessageBase.fileType,
+            file_size: newMessageBase.fileSize,
+            created_at: newMessageBase.createdAt
+        });
+
+        if (error) {
+            console.error("Erreur d'envoi:", error);
+            alert("Erreur lors de l'envoi du message. Vérifiez votre connexion.");
+            return;
+        }
+        // Pas besoin de setMessages ici car le channel 'postgres_changes' va le recevoir
+    } else {
+        // Fallback LocalStorage
+        const newMessage: ChatMessage = {
+            id: `m-${Date.now()}`,
+            ...newMessageBase,
+            read: false
+        };
+        const all = storage.getMessages();
+        storage.saveMessages([...all, newMessage]);
+        setMessages([...messages, newMessage]); // Update local state immediately
+    }
+
     setInputText('');
     setFile(null);
   };
@@ -124,15 +170,29 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
               <p className={`text-[10px] uppercase font-bold ${selectedContact === 'global' ? 'text-white/60' : 'text-gray-400'}`}>Tous les membres</p>
             </div>
           </button>
-          {contacts.map(u => (
+          {contacts.map(u => {
+            const unread = getUnreadCount(u.id);
+            return (
             <button key={u.id} onClick={() => setSelectedContact(u)} className={`w-full p-4 md:p-6 text-left flex items-center gap-4 border-b border-gray-50 transition-all ${selectedContact !== 'global' && selectedContact?.id === u.id ? 'bg-ivoryGreen text-white' : 'hover:bg-gray-50'}`}>
-              <img src={u.avatar} className="w-12 h-12 rounded-2xl object-cover" />
-              <div>
-                <p className="font-black text-sm">{u.firstName} {u.name}</p>
+              <div className="relative">
+                <img src={u.avatar} className="w-12 h-12 rounded-2xl object-cover" />
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full" title="En ligne"></div>
+                {unread > 0 && (
+                    <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-[10px] font-black flex items-center justify-center rounded-full border-2 border-white animate-bounce shadow-sm">
+                        {unread}
+                    </div>
+                )}
+              </div>
+              <div className="flex-grow">
+                <div className="flex justify-between items-center">
+                    <p className="font-black text-sm">{u.firstName} {u.name}</p>
+                    {unread > 0 && <span className="w-2 h-2 bg-red-500 rounded-full"></span>}
+                </div>
                 <p className={`text-[10px] uppercase font-bold ${selectedContact !== 'global' && selectedContact?.id === u.id ? 'text-white/60' : 'text-gray-400'}`}>{u.role}</p>
               </div>
             </button>
-          ))}
+            );
+          })}
         </div>
       </div>
 

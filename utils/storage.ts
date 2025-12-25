@@ -106,7 +106,16 @@ export const storage = {
     return null;
   },
   init: () => {
-    if (!localStorage.getItem(USERS_KEY)) storage.saveUsers(MOCK_USERS);
+    // Nettoyage des données de démonstration si elles existent encore
+    const currentUsers = storage.getUsers();
+    const realUsers = currentUsers.filter(u => !MOCK_USERS.some(m => m.id === u.id));
+    if (realUsers.length !== currentUsers.length) {
+       storage.saveUsers(realUsers);
+    }
+
+    // On ne charge plus les mocks par défaut
+    // if (!localStorage.getItem(USERS_KEY)) storage.saveUsers(MOCK_USERS);
+    
     if (!localStorage.getItem(COURSES_KEY)) storage.saveCourses(MOCK_COURSES);
     if (!localStorage.getItem(ENROLLMENTS_KEY)) {
       const mockEnrolls: Enrollment[] = [
