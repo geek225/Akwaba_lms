@@ -146,26 +146,28 @@ const AdminPanel: React.FC<{ currentUser: User }> = ({ currentUser }) => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-7xl animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-8">
+    <div className="container mx-auto px-4 py-8 md:py-12 max-w-7xl animate-in fade-in duration-500">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-10 gap-8">
         <div>
-          <h1 className="text-5xl font-black text-gray-900 tracking-tighter">Administration</h1>
+          <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tighter">Administration</h1>
           <p className="text-gray-400 font-bold uppercase text-[10px] tracking-[0.4em] mt-2">PLATEFORME AKWABA • ABIDJAN</p>
         </div>
-        <div className="flex bg-white p-1.5 rounded-[24px] shadow-sm border border-gray-100">
-          {(['staff', 'students', 'courses', 'messages', 'codes', 'profile'] as const).map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-3.5 rounded-[18px] font-black text-[10px] transition-all uppercase tracking-widest ${activeTab === tab ? 'bg-ivoryGreen text-white shadow-xl' : 'text-gray-400 hover:text-gray-600'}`}>
-              {tab === 'staff' ? 'ÉQUIPE' : tab === 'students' ? 'ÉLÈVES' : tab === 'courses' ? 'COURS' : tab === 'messages' ? 'MESSAGES' : tab === 'codes' ? 'CODES ACCÈS' : 'MON PROFIL'}
-            </button>
-          ))}
+        <div className="flex bg-white p-1.5 rounded-[24px] shadow-sm border border-gray-100 overflow-x-auto max-w-full w-full xl:w-auto scrollbar-hide">
+          <div className="flex gap-2 min-w-max">
+            {(['staff', 'students', 'courses', 'messages', 'codes', 'profile'] as const).map(tab => (
+                <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 md:px-6 py-3.5 rounded-[18px] font-black text-[10px] transition-all uppercase tracking-widest whitespace-nowrap ${activeTab === tab ? 'bg-ivoryGreen text-white shadow-xl' : 'text-gray-400 hover:text-gray-600'}`}>
+                {tab === 'staff' ? 'ÉQUIPE' : tab === 'students' ? 'ÉLÈVES' : tab === 'courses' ? 'COURS' : tab === 'messages' ? 'MESSAGES' : tab === 'codes' ? 'CODES ACCÈS' : 'MON PROFIL'}
+                </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {activeTab === 'profile' ? (
         <ProfileEdit userId={currentUserId} initialUser={currentUser} />
       ) : activeTab === 'codes' ? (
-        <div className="grid lg:grid-cols-3 gap-12">
-            <div className="lg:col-span-1 bg-white p-12 rounded-[56px] shadow-2xl border border-gray-50 h-fit">
+        <div className="grid lg:grid-cols-3 gap-8 md:gap-12">
+            <div className="lg:col-span-1 bg-white p-8 md:p-12 rounded-[40px] md:rounded-[56px] shadow-2xl border border-gray-50 h-fit">
                 <div className="w-20 h-20 bg-ivoryOrange/10 text-ivoryOrange rounded-[32px] flex items-center justify-center mb-10">
                     <Key size={40} />
                 </div>
@@ -230,8 +232,8 @@ const AdminPanel: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             </div>
         </div>
       ) : activeTab === 'messages' ? (
-        <div className="grid lg:grid-cols-3 gap-12">
-          <div className="lg:col-span-1 bg-white p-12 rounded-[56px] shadow-2xl border border-gray-50 h-fit">
+        <div className="grid lg:grid-cols-3 gap-8 md:gap-12">
+          <div className="lg:col-span-1 bg-white p-8 md:p-12 rounded-[40px] md:rounded-[56px] shadow-2xl border border-gray-50 h-fit">
             <div className="w-20 h-20 bg-ivoryOrange/10 text-ivoryOrange rounded-[32px] flex items-center justify-center mb-10">
               <MessageSquare size={40} />
             </div>
@@ -245,15 +247,15 @@ const AdminPanel: React.FC<{ currentUser: User }> = ({ currentUser }) => {
           </div>
         </div>
       ) : activeTab === 'courses' ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
            {courses.map(c => (
-             <div key={c.id} className="bg-white rounded-[56px] overflow-hidden border border-gray-100 shadow-sm group hover:shadow-2xl transition-all">
+             <div key={c.id} className="bg-white rounded-[40px] md:rounded-[56px] overflow-hidden border border-gray-100 shadow-sm group hover:shadow-2xl transition-all">
                <div className="h-48 relative overflow-hidden">
                  <img src={c.thumbnail} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                  <div className="absolute inset-0 bg-black/20"></div>
                  <div className="absolute top-6 left-6 bg-white/90 backdrop-blur px-4 py-2 rounded-2xl text-[10px] font-black text-ivoryGreen uppercase tracking-widest">{c.category}</div>
                </div>
-               <div className="p-10">
+               <div className="p-8 md:p-10">
                  <h3 className="font-black text-2xl mb-8 text-gray-900 leading-tight h-[4rem] line-clamp-2">{c.title}</h3>
                  <div className="flex gap-4">
                     <button onClick={() => setEditingCourseId(c.id)} className="flex-1 py-4 bg-gray-50 text-gray-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-ivoryOrange hover:text-white transition-all">Modifier</button>
@@ -264,41 +266,41 @@ const AdminPanel: React.FC<{ currentUser: User }> = ({ currentUser }) => {
            ))}
         </div>
       ) : (
-        <div className="bg-white rounded-[56px] shadow-2xl border border-gray-100 overflow-hidden">
-          <div className="p-10 bg-gray-50/50 flex flex-wrap gap-6 items-center justify-between border-b">
+        <div className="bg-white rounded-[40px] md:rounded-[56px] shadow-2xl border border-gray-100 overflow-hidden">
+          <div className="p-6 md:p-10 bg-gray-50/50 flex flex-col md:flex-row gap-6 items-stretch md:items-center justify-between border-b">
             <div className="relative flex-grow max-w-xl">
               <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher par nom ou email..." className="w-full pl-16 pr-8 py-6 rounded-[32px] border-4 border-white bg-white focus:border-ivoryOrange outline-none font-black text-gray-900 shadow-xl transition-all" />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher par nom ou email..." className="w-full pl-16 pr-8 py-4 md:py-6 rounded-[32px] border-4 border-white bg-white focus:border-ivoryOrange outline-none font-black text-gray-900 shadow-xl transition-all" />
             </div>
-            <button onClick={() => { setEditingUser(null); setUserFormData({role: activeTab === 'staff' ? UserRole.INSTRUCTOR : UserRole.STUDENT}); setShowUserModal(true); }} className="px-12 py-6 bg-ivoryGreen text-white rounded-[32px] font-black text-lg flex items-center gap-4 hover:scale-105 transition-all shadow-2xl"><UserPlus size={24} /> AJOUTER</button>
+            <button onClick={() => { setEditingUser(null); setUserFormData({role: activeTab === 'staff' ? UserRole.INSTRUCTOR : UserRole.STUDENT}); setShowUserModal(true); }} className="px-8 py-4 md:px-12 md:py-6 bg-ivoryGreen text-white rounded-[32px] font-black text-lg flex items-center justify-center gap-4 hover:scale-105 transition-all shadow-2xl"><UserPlus size={24} /> AJOUTER</button>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
+            <table className="w-full text-left min-w-[800px]">
               <thead className="bg-gray-100/50 text-[10px] font-black uppercase text-gray-400 tracking-[0.3em] border-b">
                 <tr>
-                  <th className="px-12 py-8">Utilisateur</th>
-                  <th className="px-12 py-8">Rôle / Statut</th>
-                  <th className="px-12 py-8 text-right">Actions</th>
+                  <th className="px-6 py-6 md:px-12 md:py-8">Utilisateur</th>
+                  <th className="px-6 py-6 md:px-12 md:py-8">Rôle / Statut</th>
+                  <th className="px-6 py-6 md:px-12 md:py-8 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {filteredUsers.map(u => (
                   <tr key={u.id} className="hover:bg-ivoryGreen/[0.02] transition-colors group">
-                    <td className="px-12 py-10">
+                    <td className="px-6 py-6 md:px-12 md:py-10">
                       <div className="flex items-center gap-6">
-                        <img src={u.avatar} className="w-20 h-20 rounded-[32px] object-cover border-4 border-white shadow-xl" />
+                        <img src={u.avatar} className="w-16 h-16 md:w-20 md:h-20 rounded-[32px] object-cover border-4 border-white shadow-xl" />
                         <div>
-                          <p className="font-black text-gray-900 text-2xl tracking-tighter mb-1">{u.firstName} {u.name}</p>
+                          <p className="font-black text-gray-900 text-xl md:text-2xl tracking-tighter mb-1">{u.firstName} {u.name}</p>
                           <p className="text-xs font-bold text-gray-400 tracking-wide uppercase">{u.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-12 py-10">
+                    <td className="px-6 py-6 md:px-12 md:py-10">
                       <span className="px-6 py-2 bg-white border border-gray-100 rounded-full text-[10px] font-black uppercase text-ivoryGreen tracking-widest shadow-sm">{u.role}</span>
                     </td>
-                    <td className="px-12 py-10 text-right">
-                      <div className="flex justify-end gap-4 opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
+                    <td className="px-6 py-6 md:px-12 md:py-10 text-right">
+                      <div className="flex justify-end gap-4 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all md:transform md:translate-x-4 md:group-hover:translate-x-0">
                         <button onClick={() => { setEditingUser(u); setUserFormData(u); setShowUserModal(true); }} className="p-4 text-ivoryGreen hover:bg-ivoryGreen/10 rounded-2xl transition-all shadow-sm bg-white border border-gray-50"><Edit2 size={20} /></button>
                         <button onClick={() => setShowDeleteConfirm(u.id)} className="p-4 text-red-500 hover:bg-red-50 rounded-2xl transition-all shadow-sm bg-white border border-gray-50"><Trash2 size={20} /></button>
                       </div>
@@ -313,17 +315,17 @@ const AdminPanel: React.FC<{ currentUser: User }> = ({ currentUser }) => {
 
       {/* POPUP DE CONFIRMATION (ADMIN) */}
       {(showDeleteConfirm || showCourseDeleteConfirm) && (
-        <div className="fixed inset-0 bg-gray-900/90 backdrop-blur-md z-[1000] flex items-center justify-center p-6">
-          <div className="bg-white p-16 rounded-[64px] max-w-lg w-full text-center space-y-10 animate-in zoom-in duration-300 shadow-2xl relative overflow-hidden">
+        <div className="fixed inset-0 bg-gray-900/90 backdrop-blur-md z-[1000] flex items-center justify-center p-4 md:p-6">
+          <div className="bg-white p-8 md:p-16 rounded-[32px] md:rounded-[64px] max-w-lg w-full text-center space-y-10 animate-in zoom-in duration-300 shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-2 bg-red-500"></div>
             <div className="w-32 h-32 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto border-8 border-white shadow-2xl transform hover:rotate-12 transition-transform">
                <AlertTriangle size={64} />
             </div>
             <div>
-              <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Action Irréversible</h3>
-              <p className="text-gray-400 font-bold text-xl mt-4">Voulez-vous vraiment supprimer cet élément ? Toutes les données liées seront effacées.</p>
+              <h3 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tighter">Action Irréversible</h3>
+              <p className="text-gray-400 font-bold text-lg md:text-xl mt-4">Voulez-vous vraiment supprimer cet élément ? Toutes les données liées seront effacées.</p>
             </div>
-            <div className="flex gap-6 pt-6">
+            <div className="flex flex-col md:flex-row gap-4 md:gap-6 pt-6">
               <button onClick={() => { setShowDeleteConfirm(null); setShowCourseDeleteConfirm(null); }} className="flex-1 py-6 bg-gray-100 rounded-[32px] font-black text-gray-400 hover:bg-gray-200 transition-all uppercase tracking-widest text-xs">ANNULER</button>
               <button onClick={() => showDeleteConfirm ? confirmDelete(showDeleteConfirm) : confirmCourseDelete(showCourseDeleteConfirm!)} className="flex-1 py-6 bg-red-500 text-white rounded-[32px] font-black shadow-2xl shadow-red-100 hover:bg-red-600 transition-all uppercase tracking-widest text-xs">OUI, SUPPRIMER</button>
             </div>
@@ -334,14 +336,14 @@ const AdminPanel: React.FC<{ currentUser: User }> = ({ currentUser }) => {
       {/* MODAL AJOUT/EDIT UTILISATEUR */}
       {showUserModal && (
         <div className="fixed inset-0 bg-gray-900/90 backdrop-blur-md z-[500] flex items-center justify-center p-4">
-          <form onSubmit={handleSaveUser} className="bg-white w-full max-w-2xl rounded-[64px] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-20 duration-500 border border-white">
-            <div className="bg-ivoryOrange p-12 text-white flex justify-between items-center relative overflow-hidden">
+          <form onSubmit={handleSaveUser} className="bg-white w-full max-w-2xl rounded-[32px] md:rounded-[64px] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-20 duration-500 border border-white max-h-[90vh] overflow-y-auto">
+            <div className="bg-ivoryOrange p-8 md:p-12 text-white flex justify-between items-center relative overflow-hidden">
                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
-               <h3 className="text-4xl font-black tracking-tighter relative z-10">{editingUser ? 'Modifier Profil' : 'Nouvel Akwabien'}</h3>
+               <h3 className="text-3xl md:text-4xl font-black tracking-tighter relative z-10">{editingUser ? 'Modifier Profil' : 'Nouvel Akwabien'}</h3>
                <button type="button" onClick={() => setShowUserModal(false)} className="bg-white/20 p-4 rounded-full relative z-10 hover:bg-white/30 transition-all"><X size={28}/></button>
             </div>
-            <div className="p-16 space-y-8">
-              <div className="grid grid-cols-2 gap-6">
+            <div className="p-8 md:p-16 space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                  <div className="space-y-2">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nom</label>
                     <input required value={userFormData.name || ''} onChange={e => setUserFormData({...userFormData, name: e.target.value})} className="w-full p-5 rounded-3xl bg-gray-50 border-2 border-transparent focus:border-ivoryOrange focus:bg-white text-gray-900 font-bold outline-none shadow-inner" />

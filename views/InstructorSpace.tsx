@@ -243,23 +243,23 @@ const InstructorSpace: React.FC<{ userRole: UserRole, currentUserId: string, for
 
       {showModuleModal && (
         <div className="fixed inset-0 bg-gray-900/95 backdrop-blur-md z-[300] flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white w-full max-w-5xl rounded-[56px] overflow-hidden shadow-2xl animate-in zoom-in duration-300 my-8">
-             <div className="bg-ivoryOrange p-10 text-white flex justify-between items-center">
-               <h3 className="text-4xl font-black tracking-tighter">Éditeur de Module</h3>
-               <button onClick={() => setShowModuleModal(false)} className="bg-white/10 p-3 rounded-full hover:bg-white/20 transition-all"><X size={32}/></button>
+          <div className="bg-white w-full max-w-5xl rounded-[32px] md:rounded-[56px] overflow-hidden shadow-2xl animate-in zoom-in duration-300 my-8">
+             <div className="bg-ivoryOrange p-6 md:p-10 text-white flex justify-between items-center">
+               <h3 className="text-2xl md:text-4xl font-black tracking-tighter">Éditeur de Module</h3>
+               <button onClick={() => setShowModuleModal(false)} className="bg-white/10 p-3 rounded-full hover:bg-white/20 transition-all"><X size={28}/></button>
              </div>
-             <div className="p-12 space-y-12">
-                <div className="grid md:grid-cols-2 gap-10">
+             <div className="p-6 md:p-12 space-y-8 md:space-y-12">
+                <div className="grid md:grid-cols-2 gap-6 md:gap-10">
                    <div className="space-y-6">
-                      <input value={modForm.title} onChange={e => setModForm({...modForm, title: e.target.value})} placeholder="Titre module" className="w-full p-6 rounded-3xl bg-gray-50 border-2 border-transparent focus:border-ivoryOrange focus:bg-white outline-none font-bold text-gray-900" />
-                      <input value={modForm.videoUrl} onChange={e => setModForm({...modForm, videoUrl: e.target.value})} placeholder="Lien Vidéo (YouTube/MP4)" className="w-full p-6 rounded-3xl bg-gray-50 border-2 border-transparent focus:border-ivoryOrange focus:bg-white outline-none font-bold text-gray-900" />
+                      <input value={modForm.title} onChange={e => setModForm({...modForm, title: e.target.value})} placeholder="Titre module" className="w-full p-4 md:p-6 rounded-3xl bg-gray-50 border-2 border-transparent focus:border-ivoryOrange focus:bg-white outline-none font-bold text-gray-900" />
+                      <input value={modForm.videoUrl} onChange={e => setModForm({...modForm, videoUrl: e.target.value})} placeholder="Lien Vidéo (YouTube/MP4)" className="w-full p-4 md:p-6 rounded-3xl bg-gray-50 border-2 border-transparent focus:border-ivoryOrange focus:bg-white outline-none font-bold text-gray-900" />
                    </div>
-                   <textarea value={modForm.description} onChange={e => setModForm({...modForm, description: e.target.value})} rows={5} placeholder="Résumé du module..." className="w-full p-6 rounded-3xl bg-gray-50 border-2 border-transparent focus:border-ivoryOrange focus:bg-white outline-none font-bold text-gray-900"></textarea>
+                   <textarea value={modForm.description} onChange={e => setModForm({...modForm, description: e.target.value})} rows={5} placeholder="Résumé du module..." className="w-full p-4 md:p-6 rounded-3xl bg-gray-50 border-2 border-transparent focus:border-ivoryOrange focus:bg-white outline-none font-bold text-gray-900"></textarea>
                 </div>
                 
                 <div className="pt-10 border-t border-gray-100">
                   <div className="flex justify-between items-center mb-6">
-                    <h4 className="text-2xl font-black text-gray-900">Quiz du module</h4>
+                    <h4 className="text-xl md:text-2xl font-black text-gray-900">Quiz du module</h4>
                     <button onClick={addQuizQuestion} className="text-xs font-black text-ivoryOrange uppercase tracking-widest">+ Question</button>
                   </div>
                   <div className="space-y-4">

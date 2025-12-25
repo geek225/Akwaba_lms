@@ -80,25 +80,30 @@ const Home: React.FC<HomeProps> = ({ onSelectCourse, currentUser, onNavigateToAu
   return (
     <div className="pb-20">
       {/* Hero Section */}
-      <section className="bg-ivoryWhite py-24 relative overflow-hidden">
+      <section className="bg-ivoryWhite py-12 md:py-24 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-1/3 h-full bg-ivoryOrange opacity-5 -skew-x-12 transform translate-x-20"></div>
         <div className="container mx-auto px-4 relative">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-6xl md:text-7xl font-black text-gray-900 mb-8 leading-[0.9] tracking-tighter">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-gray-900 mb-6 md:mb-8 leading-[0.9] tracking-tighter">
               L'avenir se <span className="text-ivoryOrange">construit</span> ici et <span className="text-ivoryGreen underline decoration-8 underline-offset-8">maintenant</span>.
             </h1>
-            <p className="text-xl text-gray-500 mb-12 font-medium max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-gray-500 mb-8 md:mb-12 font-medium max-w-2xl mx-auto">
               Rejoignez des milliers d'ivoiriens qui se forment aux métiers d'aujourd'hui.
             </p>
             
-            <div className="relative max-w-2xl mx-auto group">
-              <input 
-                type="text" 
-                placeholder="Ex: Agriculture, Digital, Vannerie..." 
-                className="w-full pl-14 pr-4 py-6 rounded-[32px] border-4 border-gray-100 shadow-2xl focus:border-ivoryOrange transition-all outline-none font-bold text-lg"
-              />
-              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-ivoryOrange" size={24} />
-              <button className="absolute right-3 top-3 bottom-3 bg-ivoryOrange hover:bg-orange-600 text-white px-10 rounded-2xl font-black transition-all">
+            <div className="relative max-w-2xl mx-auto group flex flex-col md:block gap-4">
+              <div className="relative w-full">
+                <input 
+                    type="text" 
+                    placeholder="Ex: Agriculture, Digital, Vannerie..." 
+                    className="w-full pl-12 md:pl-14 pr-4 py-4 md:py-6 rounded-[24px] md:rounded-[32px] border-4 border-gray-100 shadow-2xl focus:border-ivoryOrange transition-all outline-none font-bold text-base md:text-lg"
+                />
+                <Search className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-ivoryOrange" size={20} />
+                <button className="hidden md:block absolute right-3 top-3 bottom-3 bg-ivoryOrange hover:bg-orange-600 text-white px-10 rounded-2xl font-black transition-all">
+                    Chercher
+                </button>
+              </div>
+              <button className="md:hidden w-full bg-ivoryOrange hover:bg-orange-600 text-white py-4 rounded-[24px] font-black transition-all shadow-xl">
                 Chercher
               </button>
             </div>
@@ -107,10 +112,10 @@ const Home: React.FC<HomeProps> = ({ onSelectCourse, currentUser, onNavigateToAu
       </section>
 
       {/* Course List */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="flex justify-between items-end mb-12">
+      <section className="container mx-auto px-4 py-12 md:py-20">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-12 gap-4">
           <div>
-            <h2 className="text-4xl font-black text-gray-900 tracking-tight">Cours populaires</h2>
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">Cours populaires</h2>
             <div className="h-2 w-20 bg-ivoryGreen mt-3 rounded-full"></div>
           </div>
         </div>

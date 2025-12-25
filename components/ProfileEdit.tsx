@@ -139,8 +139,8 @@ const ProfileEdit: React.FC<{ userId: string; initialUser?: User }> = ({ userId,
           </div>
         </div>
 
-        <div className="bg-white p-10 rounded-[48px] shadow-xl border border-gray-100 space-y-8">
-          <h3 className="text-2xl font-black flex items-center gap-3 text-ivoryOrange"><Phone/> Contact & Localisation</h3>
+        <div className="bg-white p-6 md:p-10 rounded-[32px] md:rounded-[48px] shadow-xl border border-gray-100 space-y-6 md:space-y-8">
+          <h3 className="text-xl md:text-2xl font-black flex items-center gap-3 text-ivoryOrange"><Phone/> Contact & Localisation</h3>
           <div className="space-y-6">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Téléphone (International)</label>

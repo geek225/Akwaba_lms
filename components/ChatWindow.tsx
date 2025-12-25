@@ -170,28 +170,28 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
               ))}
             </div>
 
-            <div className="p-8 bg-white border-t space-y-4">
+            <div className="p-4 md:p-8 bg-white border-t space-y-4">
               {file && (
                 <div className="flex items-center gap-4 bg-ivoryOrange/5 p-4 rounded-3xl border-2 border-ivoryOrange/20 animate-in zoom-in">
                   <div className="w-12 h-12 bg-ivoryOrange/10 rounded-2xl flex items-center justify-center text-ivoryOrange">
                     <FileText size={24} />
                   </div>
-                  <div className="flex-grow">
+                  <div className="flex-grow overflow-hidden">
                     <span className="block text-xs font-black truncate text-gray-900">{file.name}</span>
                     <span className="text-[10px] font-bold text-ivoryOrange uppercase">Prêt pour l'envoi</span>
                   </div>
                   <button onClick={() => setFile(null)} className="p-2 text-red-400 hover:bg-red-50 rounded-xl transition-all"><X size={20}/></button>
                 </div>
               )}
-              <div className="flex gap-4">
+              <div className="flex gap-2 md:gap-4">
                 <div className="relative flex-grow">
-                  <input value={inputText} onChange={e => setInputText(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMessage()} placeholder="Votre message ici..." className="w-full pl-8 pr-16 py-6 rounded-[32px] bg-gray-50 border-2 border-transparent focus:border-ivoryOrange focus:bg-white outline-none font-bold text-gray-900 transition-all shadow-inner" />
-                  <label className="absolute right-6 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-ivoryOrange transition-all cursor-pointer">
-                    <Paperclip size={24} />
+                  <input value={inputText} onChange={e => setInputText(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMessage()} placeholder="Votre message..." className="w-full pl-6 md:pl-8 pr-12 md:pr-16 py-4 md:py-6 rounded-[24px] md:rounded-[32px] bg-gray-50 border-2 border-transparent focus:border-ivoryOrange focus:bg-white outline-none font-bold text-gray-900 text-sm md:text-base transition-all shadow-inner" />
+                  <label className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-ivoryOrange transition-all cursor-pointer">
+                    <Paperclip size={20} className="md:w-6 md:h-6" />
                     <input type="file" className="hidden" onChange={handleFileChange} accept="image/*,video/*,application/pdf" />
                   </label>
                 </div>
-                <button onClick={sendMessage} className="p-6 bg-ivoryGreen text-white rounded-[28px] shadow-xl hover:scale-110 active:scale-95 transition-all"><Send size={28} /></button>
+                <button onClick={sendMessage} className="p-4 md:p-6 bg-ivoryGreen text-white rounded-[24px] md:rounded-[28px] shadow-xl hover:scale-110 active:scale-95 transition-all"><Send size={20} className="md:w-7 md:h-7" /></button>
               </div>
             </div>
           </>

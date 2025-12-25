@@ -21,24 +21,24 @@ const BlogView: React.FC<BlogViewProps> = ({ currentUser, onEdit }) => {
   const canEdit = currentUser && (currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.EDITOR);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-20 px-4">
+    <div className="min-h-screen bg-gray-50 py-12 md:py-20 px-4">
       <div className="container mx-auto max-w-6xl">
-        <div className="flex justify-between items-end mb-16">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 md:mb-16 gap-6">
             <div>
-                <h1 className="text-5xl font-black text-gray-900 mb-4 tracking-tighter">Le Blog <span className="text-ivoryOrange">Akwaba</span></h1>
-                <p className="text-xl text-gray-500">Actualités, conseils et histoires de notre communauté.</p>
+                <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-2 md:mb-4 tracking-tighter">Le Blog <span className="text-ivoryOrange">Akwaba</span></h1>
+                <p className="text-lg md:text-xl text-gray-500">Actualités, conseils et histoires de notre communauté.</p>
             </div>
             {canEdit && (
                 <button 
                     onClick={onEdit}
-                    className="px-8 py-4 bg-ivoryGreen text-white rounded-2xl font-black shadow-lg shadow-green-100 hover:bg-green-700 transition-all"
+                    className="w-full md:w-auto px-8 py-4 bg-ivoryGreen text-white rounded-2xl font-black shadow-lg shadow-green-100 hover:bg-green-700 transition-all"
                 >
                     GÉRER LES ARTICLES
                 </button>
             )}
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {posts.map(post => (
                 <article key={post.id} className="bg-white rounded-[40px] overflow-hidden shadow-xl border border-gray-100 group hover:-translate-y-2 transition-transform duration-300">
                     <div className="h-64 overflow-hidden relative">

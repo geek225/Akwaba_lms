@@ -165,21 +165,21 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
 
   return (
     <div className="min-h-[85vh] flex flex-col items-center justify-center p-4">
-      <div className="bg-white w-full max-w-5xl rounded-[48px] shadow-2xl overflow-hidden flex flex-col md:flex-row border border-gray-50">
-        <div className="bg-ivoryGreen md:w-2/5 p-12 text-white flex flex-col justify-between relative overflow-hidden">
+      <div className="bg-white w-full max-w-5xl rounded-[32px] md:rounded-[48px] shadow-2xl overflow-hidden flex flex-col md:flex-row border border-gray-50">
+        <div className="bg-ivoryGreen md:w-2/5 p-8 md:p-12 text-white flex flex-col justify-between relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32"></div>
           <div className="relative z-10">
-            <div className="w-20 h-20 bg-ivoryOrange rounded-3xl flex items-center justify-center shadow-2xl mb-10">
-              <span className="text-white font-black text-4xl">A</span>
+            <div className="w-16 h-16 md:w-20 md:h-20 bg-ivoryOrange rounded-3xl flex items-center justify-center shadow-2xl mb-6 md:mb-10">
+              <span className="text-white font-black text-3xl md:text-4xl">A</span>
             </div>
-            <h2 className="text-5xl font-black mb-6 leading-tight tracking-tighter">Bienvenue.</h2>
-            <p className="text-green-100 text-lg font-medium opacity-80 leading-relaxed">Accédez à votre espace d'apprentissage local 100% ivoirien.</p>
+            <h2 className="text-3xl md:text-5xl font-black mb-4 md:mb-6 leading-tight tracking-tighter">Bienvenue.</h2>
+            <p className="text-green-100 text-base md:text-lg font-medium opacity-80 leading-relaxed">Accédez à votre espace d'apprentissage local 100% ivoirien.</p>
           </div>
         </div>
 
-        <div className="p-16 md:w-3/5 overflow-y-auto max-h-[90vh]">
-          <h1 className="text-4xl font-black text-gray-900 mb-2">{isLogin ? 'Connexion' : 'Inscription'}</h1>
-          <p className="text-gray-400 mb-8">{isLogin ? 'Ravis de vous revoir !' : 'Créez votre compte pour commencer.'}</p>
+        <div className="p-8 md:p-16 md:w-3/5 overflow-y-auto max-h-[90vh]">
+          <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-2">{isLogin ? 'Connexion' : 'Inscription'}</h1>
+          <p className="text-gray-400 mb-6 md:mb-8">{isLogin ? 'Ravis de vous revoir !' : 'Créez votre compte pour commencer.'}</p>
           
           {error && (
             <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-bold border border-red-100">
