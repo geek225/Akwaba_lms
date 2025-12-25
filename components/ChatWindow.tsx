@@ -255,7 +255,11 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     const f = e.target.files?.[0];
     if (f) {
       // Limite réduite à 2MB pour éviter de saturer le LocalStorage (Quota ~5MB) ou la colonne texte Supabase
-      if (f.size > 2 * 1024 * 1024) return alert("Fichier trop lourd (Max 2MB pour le moment)");
+      if (f.size > 2 * 1024 * 1024) {
+          alert("Le fichier est trop volumineux (Max 2 Mo). Veuillez choisir un fichier plus léger.");
+          e.target.value = ''; // Réinitialise le champ pour permettre une nouvelle sélection
+          return;
+      }
       const reader = new FileReader();
       reader.onload = (ev) => {
         setFile({ name: f.name, data: ev.target?.result as string, size: f.size, type: f.type });
