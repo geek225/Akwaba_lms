@@ -294,6 +294,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
               {loading ? 'Chargement...' : (isLogin ? 'Accéder à mon espace' : "Créer mon profil")}
             </button>
           </form>
+          {!isResetting && (
           <button onClick={() => { setIsLogin(!isLogin); setError(null); }} className="w-full mt-10 text-sm font-black text-ivoryGreen hover:text-green-700 transition-colors">
             {isLogin ? "PAS ENCORE DE COMPTE ? S'INSCRIRE" : "DÉJÀ UN COMPTE ? SE CONNECTER"}
           </button>
