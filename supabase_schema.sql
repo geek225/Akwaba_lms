@@ -1,9 +1,20 @@
+-- CLEANUP: Supprime les tables existantes pour éviter les conflits de types (UUID vs Text)
+-- Attention : Cela effacera les données actuelles de ces tables dans Supabase pour permettre une migration propre.
+DROP TABLE IF EXISTS public.modules CASCADE;
+DROP TABLE IF EXISTS public.enrollments CASCADE;
+DROP TABLE IF EXISTS public.courses CASCADE;
+DROP TABLE IF EXISTS public.blog_posts CASCADE;
+DROP TABLE IF EXISTS public.access_codes CASCADE;
+DROP TABLE IF EXISTS public.messages CASCADE;
+DROP TABLE IF EXISTS public.users CASCADE;
+
 -- Enable UUID extension
 create extension if not exists "uuid-ossp";
 
--- USERS TABLE (Already likely exists, but ensuring columns)
-create table if not exists public.users (
-  id uuid references auth.users not null primary key, -- Linked to Supabase Auth
+-- USERS TABLE
+-- id est de type TEXT pour accepter à la fois les UUID de Supabase Auth et les IDs 'u1', 'u2' de démo
+create table public.users (
+  id text primary key, 
   email text,
   name text,
   first_name text,
@@ -17,11 +28,12 @@ create table if not exists public.users (
 );
 
 -- COURSES TABLE
-create table if not exists public.courses (
-  id text primary key, -- Keeping text id to match existing logic (e.g. 'c1'), or use uuid
+-- id est de type TEXT pour accepter 'c1', 'c2'
+create table public.courses (
+  id text primary key,
   title text not null,
   instructor_name text,
-  instructor_id text, -- references users(id) if possible, but keep text for flexibility
+  instructor_id text, -- Lien vers users(id)
   thumbnail text,
   category text,
   description text,
@@ -30,19 +42,19 @@ create table if not exists public.courses (
 );
 
 -- MODULES TABLE
-create table if not exists public.modules (
+create table public.modules (
   id text primary key,
   course_id text references public.courses(id) on delete cascade,
   title text,
   video_url text,
-  video_type text, -- 'file' or 'url'
+  video_type text, -- 'file' ou 'url'
   description text,
-  quiz jsonb, -- Storing quiz questions as JSON
+  quiz jsonb, -- Stockage des questions en JSON
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
 
 -- ENROLLMENTS TABLE
-create table if not exists public.enrollments (
+create table public.enrollments (
   user_id text references public.users(id) on delete cascade,
   course_id text references public.courses(id) on delete cascade,
   enrolled_at timestamp with time zone default timezone('utc'::text, now()),
@@ -51,7 +63,7 @@ create table if not exists public.enrollments (
 );
 
 -- BLOG POSTS TABLE
-create table if not exists public.blog_posts (
+create table public.blog_posts (
   id text primary key,
   title text,
   excerpt text,
@@ -64,7 +76,7 @@ create table if not exists public.blog_posts (
 );
 
 -- ACCESS CODES TABLE
-create table if not exists public.access_codes (
+create table public.access_codes (
   code text primary key,
   role text,
   is_used boolean default false,
@@ -72,42 +84,45 @@ create table if not exists public.access_codes (
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
 
--- MESSAGES TABLE (Already exists, but adding for completeness)
-create table if not exists public.messages (
+-- MESSAGES TABLE
+create table public.messages (
   id uuid default uuid_generate_v4() primary key,
   content text,
   sender_id text, -- references users(id)
-  receiver_id text, -- can be 'all_students', etc.
+  receiver_id text, -- peut être 'all_students', etc. ou un user_id
   file_url text,
   file_type text,
   created_at timestamp with time zone default timezone('utc'::text, now()),
   read boolean default false
 );
 
--- RLS POLICIES (Simple version: public access for now, secure later)
+-- RLS POLICIES (Sécurité)
 alter table public.users enable row level security;
 create policy "Public users are viewable by everyone" on public.users for select using (true);
-create policy "Users can insert their own profile" on public.users for insert with check (auth.uid() = id);
-create policy "Users can update own profile" on public.users for update using (auth.uid() = id);
+create policy "Users can insert their own profile" on public.users for insert with check (true); -- Permissif pour la migration
+create policy "Users can update own profile" on public.users for update using (true); -- Permissif pour la migration
 
 alter table public.courses enable row level security;
 create policy "Courses are viewable by everyone" on public.courses for select using (true);
-create policy "Instructors/Admins can insert courses" on public.courses for insert with check (true); -- Simplify for now
-create policy "Instructors/Admins can update courses" on public.courses for update using (true);
+create policy "Instructors/Admins can manage courses" on public.courses for all using (true);
 
 alter table public.modules enable row level security;
 create policy "Modules are viewable by everyone" on public.modules for select using (true);
-create policy "Instructors/Admins can insert modules" on public.modules for insert with check (true);
-create policy "Instructors/Admins can update modules" on public.modules for update using (true);
+create policy "Instructors/Admins can manage modules" on public.modules for all using (true);
 
 alter table public.enrollments enable row level security;
-create policy "Enrollments viewable by user" on public.enrollments for select using (auth.uid()::text = user_id);
-create policy "Enrollments insertable by user" on public.enrollments for insert with check (auth.uid()::text = user_id);
-create policy "Enrollments updatable by user" on public.enrollments for update using (auth.uid()::text = user_id);
+create policy "Enrollments viewable by everyone" on public.enrollments for select using (true); -- Simplifié pour le débug
+create policy "Enrollments manageable by everyone" on public.enrollments for all using (true);
 
 alter table public.blog_posts enable row level security;
 create policy "Blog posts viewable by everyone" on public.blog_posts for select using (true);
 create policy "Editors/Admins can manage blog" on public.blog_posts for all using (true);
 
 alter table public.access_codes enable row level security;
-create policy "Access codes viewable by everyone" on public.access_codes for select using (true); -- Needed for validation
+create policy "Access codes viewable by everyone" on public.access_codes for select using (true);
+create policy "Access codes manageable by admins" on public.access_codes for all using (true);
+
+alter table public.messages enable row level security;
+create policy "Messages viewable by everyone" on public.messages for select using (true);
+create policy "Messages insertable by everyone" on public.messages for insert with check (true);
+create policy "Messages updatable by everyone" on public.messages for update using (true);

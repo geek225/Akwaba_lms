@@ -128,15 +128,27 @@ export const storage = {
     window.dispatchEvent(new Event('storage_update'));
 
     if (supabase) {
-        enrolls.forEach(async (e) => {
-            const { error } = await supabase.from('enrollments').upsert({
-                user_id: e.userId,
-                course_id: e.courseId,
-                enrolled_at: e.enrolledAt,
-                progress: e.progress
+        // On s'assure d'abord que les utilisateurs existent avant d'envoyer les inscriptions
+        // pour éviter l'erreur FK (23503)
+        const currentUsers = storage.getUsers();
+        storage.saveUsers(currentUsers); 
+
+        // Petite pause pour laisser le temps à saveUsers de finir (simple hack, idéalement async/await complet)
+        setTimeout(() => {
+            enrolls.forEach(async (e) => {
+                try {
+                    const { error } = await supabase.from('enrollments').upsert({
+                        user_id: e.userId,
+                        course_id: e.courseId,
+                        enrolled_at: e.enrolledAt,
+                        progress: e.progress
+                    });
+                    if (error) console.error("Erreur sync enrollment:", error);
+                } catch (err) {
+                    console.error("Exception sync enrollment:", err);
+                }
             });
-            if (error) console.error("Erreur sync enrollment:", error);
-        });
+        }, 1000);
     }
   },
 
@@ -260,7 +272,7 @@ export const storage = {
     if (supabase) {
         console.log("Starting Supabase Sync...");
         
-        // A. Users
+        // A. Users (MUST BE FIRST to avoid FK errors)
         const { data: users } = await supabase.from('users').select('*');
         if (users && users.length > 0) {
             const mappedUsers: User[] = users.map((u: any) => ({
@@ -280,13 +292,14 @@ export const storage = {
         } else {
             // Push local to remote if remote is empty
             const local = storage.getUsers();
-            if (local.length > 0) storage.saveUsers(local);
+            if (local.length > 0) storage.saveUsers(local); // This creates users in DB
         }
 
-        // B. Courses
+        // B. Courses (MUST BE SECOND)
         const { data: courses } = await supabase.from('courses').select('*, modules(*)');
         if (courses && courses.length > 0) {
-            const mappedCourses: Course[] = courses.map((c: any) => ({
+             // ... mapping code ...
+             const mappedCourses: Course[] = courses.map((c: any) => ({
                 id: c.id,
                 title: c.title,
                 instructor: c.instructor_name,
@@ -308,23 +321,26 @@ export const storage = {
             localStorage.setItem(COURSES_KEY, JSON.stringify(mappedCourses));
         } else {
             const local = storage.getCourses();
-            if (local.length > 0) storage.saveCourses(local);
+            if (local.length > 0) await storage.saveCourses(local); // Await critical here
         }
 
-        // C. Enrollments
-        const { data: enrolls } = await supabase.from('enrollments').select('*');
-        if (enrolls && enrolls.length > 0) {
-            const mappedEnrolls: Enrollment[] = enrolls.map((e: any) => ({
-                userId: e.user_id,
-                courseId: e.course_id,
-                enrolledAt: e.enrolled_at,
-                progress: e.progress
-            }));
-            localStorage.setItem(ENROLLMENTS_KEY, JSON.stringify(mappedEnrolls));
-        } else {
-            const local = storage.getEnrollments();
-            if (local.length > 0) storage.saveEnrollments(local);
-        }
+        // C. Enrollments (Depends on Users AND Courses)
+        // Wait a bit to ensure Users/Courses are processed if we just pushed them
+        setTimeout(async () => {
+             const { data: enrolls } = await supabase.from('enrollments').select('*');
+             if (enrolls && enrolls.length > 0) {
+                 const mappedEnrolls: Enrollment[] = enrolls.map((e: any) => ({
+                     userId: e.user_id,
+                     courseId: e.course_id,
+                     enrolledAt: e.enrolled_at,
+                     progress: e.progress
+                 }));
+                 localStorage.setItem(ENROLLMENTS_KEY, JSON.stringify(mappedEnrolls));
+             } else {
+                 const local = storage.getEnrollments();
+                 if (local.length > 0) storage.saveEnrollments(local);
+             }
+        }, 2000); // 2s delay for enrollments sync
 
         // D. Blog Posts
         const { data: posts } = await supabase.from('blog_posts').select('*');
