@@ -23,6 +23,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
   const [phone, setPhone] = useState('');
   const [country, setCountry] = useState('');
   const [city, setCity] = useState('');
+  const [accessCode, setAccessCode] = useState('');
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
