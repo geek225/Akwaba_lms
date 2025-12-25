@@ -64,6 +64,47 @@ export const storage = {
     localStorage.setItem(BLOG_KEY, JSON.stringify(posts));
     window.dispatchEvent(new Event('storage_update'));
   },
+  getAccessCodes: (): AccessCode[] => {
+    const stored = localStorage.getItem(ACCESS_CODES_KEY);
+    return stored ? JSON.parse(stored) : [];
+  },
+  saveAccessCodes: (codes: AccessCode[]) => {
+    localStorage.setItem(ACCESS_CODES_KEY, JSON.stringify(codes));
+    window.dispatchEvent(new Event('storage_update'));
+  },
+  generateAccessCode: (role: UserRole, adminId: string): AccessCode => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    const prefix = role === UserRole.ADMIN ? 'ADM-' : (role === UserRole.INSTRUCTOR ? 'INS-' : 'EDT-');
+    code = prefix + code;
+
+    const newCode: AccessCode = {
+        code,
+        role,
+        isUsed: false,
+        generatedBy: adminId,
+        createdAt: new Date().toISOString()
+    };
+
+    const codes = storage.getAccessCodes();
+    storage.saveAccessCodes([...codes, newCode]);
+    return newCode;
+  },
+  validateAndUseCode: (code: string): UserRole | null => {
+    const codes = storage.getAccessCodes();
+    const foundIndex = codes.findIndex(c => c.code === code && !c.isUsed);
+    
+    if (foundIndex !== -1) {
+        const updatedCodes = [...codes];
+        updatedCodes[foundIndex].isUsed = true;
+        storage.saveAccessCodes(updatedCodes);
+        return updatedCodes[foundIndex].role;
+    }
+    return null;
+  },
   init: () => {
     if (!localStorage.getItem(USERS_KEY)) storage.saveUsers(MOCK_USERS);
     if (!localStorage.getItem(COURSES_KEY)) storage.saveCourses(MOCK_COURSES);
