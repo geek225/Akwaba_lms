@@ -87,11 +87,13 @@ create table public.access_codes (
 -- MESSAGES TABLE
 create table public.messages (
   id uuid default uuid_generate_v4() primary key,
-  content text,
-  sender_id text, -- references users(id)
-  receiver_id text, -- peut être 'all_students', etc. ou un user_id
-  file_url text,
+  from_id text, -- references users(id)
+  to_id text, -- references users(id)
+  text text,
+  file_name text,
+  file_data text, -- base64 data
   file_type text,
+  file_size numeric,
   created_at timestamp with time zone default timezone('utc'::text, now()),
   read boolean default false
 );
