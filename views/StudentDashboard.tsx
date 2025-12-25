@@ -32,7 +32,8 @@ const StudentDashboard: React.FC<{ initialCourse: Course | null, currentUser: Us
       const all = storage.getCourses().filter(c => !c.isDraft);
       const enrolls = storage.getEnrollments().filter(e => e.userId === currentUser.id);
       const userCourses = all.filter(c => enrolls.some(e => e.courseId === c.id));
-      setCourses(userCourses.length > 0 ? userCourses : all.slice(0, 1)); // Demo auto-enroll
+      // Si l'étudiant n'a pas de cours, on lui montre tout le catalogue pour qu'il puisse choisir
+      setCourses(userCourses.length > 0 ? userCourses : all);
     };
     load();
     window.addEventListener('storage_update', load);

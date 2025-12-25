@@ -21,28 +21,42 @@ export const supabase = (supabaseUrl && supabaseKey)
 
 export const storage = {
   getUsers: (): User[] => {
-    const stored = localStorage.getItem(USERS_KEY);
-    return stored ? JSON.parse(stored) : MOCK_USERS;
+    try {
+      const stored = localStorage.getItem(USERS_KEY);
+      return stored ? JSON.parse(stored) : MOCK_USERS;
+    } catch (e) {
+      console.error("Erreur lecture users:", e);
+      return MOCK_USERS;
+    }
   },
   saveUsers: (users: User[]) => {
     localStorage.setItem(USERS_KEY, JSON.stringify(users));
     window.dispatchEvent(new Event('storage_update'));
-    // Si supabase est configuré, on pourrait synchroniser ici (en asynchrone)
     if (supabase) {
       // Logique de sync optionnelle
     }
   },
   getCourses: (): Course[] => {
-    const stored = localStorage.getItem(COURSES_KEY);
-    return stored ? JSON.parse(stored) : MOCK_COURSES;
+    try {
+      const stored = localStorage.getItem(COURSES_KEY);
+      return stored ? JSON.parse(stored) : MOCK_COURSES;
+    } catch (e) {
+      console.error("Erreur lecture courses:", e);
+      return MOCK_COURSES;
+    }
   },
   saveCourses: (courses: Course[]) => {
     localStorage.setItem(COURSES_KEY, JSON.stringify(courses));
     window.dispatchEvent(new Event('storage_update'));
   },
   getEnrollments: (): Enrollment[] => {
-    const stored = localStorage.getItem(ENROLLMENTS_KEY);
-    return stored ? JSON.parse(stored) : [];
+    try {
+      const stored = localStorage.getItem(ENROLLMENTS_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      console.error("Erreur lecture enrollments:", e);
+      return [];
+    }
   },
   saveEnrollments: (enrolls: Enrollment[]) => {
     localStorage.setItem(ENROLLMENTS_KEY, JSON.stringify(enrolls));
