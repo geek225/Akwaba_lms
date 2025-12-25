@@ -13,6 +13,9 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
   const [file, setFile] = useState<{name: string, data: string, size: number, type: string} | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
+  const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error'>('synced');
+
   const loadData = () => {
     // Merge local state with Supabase data if needed, but for now rely on what we have.
     // However, contacts come from storage.
@@ -27,15 +30,31 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
   };
 
   useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  useEffect(() => {
     loadData();
     window.addEventListener('storage_update', loadData);
     
     // Supabase Realtime & History
     if (supabase) {
+        setSyncStatus('syncing');
         // 1. Initial Fetch
         const fetchMessages = async () => {
              const { data, error } = await supabase!.from('messages').select('*').order('created_at', { ascending: true });
-             if (!error && data) {
+             if (error) {
+                 console.error("Erreur fetch messages:", error);
+                 setSyncStatus('error');
+             } else if (data) {
+                setSyncStatus('synced');
                 const mapped: ChatMessage[] = data.map((r: any) => ({
                    id: r.id,
                    fromId: r.from_id,
@@ -127,6 +146,9 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             .subscribe(async (status) => {
                 if (status === 'SUBSCRIBED') {
                     await channel.track({ user: currentUser, online_at: new Date().toISOString() });
+                    setSyncStatus('synced');
+                } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                    setSyncStatus('error');
                 }
             });
 
@@ -207,9 +229,12 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
 
         if (error) {
             console.warn("Erreur Supabase, bascule sur stockage local:", error);
+            alert(`Erreur d'envoi serveur: ${error.message}. Le message est sauvegardé localement mais ne sera pas visible par les autres.`);
+            setSyncStatus('error');
             // On continue vers le fallback local au lieu de bloquer
         } else {
             sentViaSupabase = true;
+            setSyncStatus('synced');
         }
     }
 
@@ -338,6 +363,22 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Hors ligne</p>
                   )}
                 </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                 {/* Connection Status Indicator */}
+                 <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold uppercase border ${
+                     syncStatus === 'synced' ? 'bg-green-50 text-green-600 border-green-200' : 
+                     syncStatus === 'syncing' ? 'bg-yellow-50 text-yellow-600 border-yellow-200' :
+                     'bg-red-50 text-red-600 border-red-200'
+                 }`}>
+                     <div className={`w-2 h-2 rounded-full ${
+                         syncStatus === 'synced' ? 'bg-green-500' : 
+                         syncStatus === 'syncing' ? 'bg-yellow-500 animate-pulse' :
+                         'bg-red-500'
+                     }`}></div>
+                     {syncStatus === 'synced' ? 'Sync' : syncStatus === 'syncing' ? 'Connexion...' : 'Erreur Sync'}
+                 </div>
               </div>
             </div>
 
