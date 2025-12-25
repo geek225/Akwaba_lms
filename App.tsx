@@ -64,7 +64,7 @@ const App: React.FC = () => {
 
     switch (currentUser.role) {
       case UserRole.ADMIN:
-        return <AdminPanel currentUserId={currentUser.id} />;
+        return <AdminPanel currentUser={currentUser} />;
       case UserRole.INSTRUCTOR:
       case UserRole.EDITOR:
         return <InstructorSpace userRole={currentUser.role} currentUserId={currentUser.id} />;

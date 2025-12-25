@@ -134,15 +134,17 @@ const AdminPanel: React.FC<{ currentUserId: string }> = ({ currentUserId }) => {
           <p className="text-gray-400 font-bold uppercase text-[10px] tracking-[0.4em] mt-2">PLATEFORME AKWABA • ABIDJAN</p>
         </div>
         <div className="flex bg-white p-1.5 rounded-[24px] shadow-sm border border-gray-100">
-          {(['staff', 'students', 'courses', 'messages'] as const).map(tab => (
+          {(['staff', 'students', 'courses', 'messages', 'profile'] as const).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} className={`px-8 py-3.5 rounded-[18px] font-black text-[10px] transition-all uppercase tracking-widest ${activeTab === tab ? 'bg-ivoryGreen text-white shadow-xl' : 'text-gray-400 hover:text-gray-600'}`}>
-              {tab === 'staff' ? 'ÉQUIPE' : tab === 'students' ? 'ÉLÈVES' : tab === 'courses' ? 'COURS' : 'MESSAGES'}
+              {tab === 'staff' ? 'ÉQUIPE' : tab === 'students' ? 'ÉLÈVES' : tab === 'courses' ? 'COURS' : tab === 'messages' ? 'MESSAGES' : 'MON PROFIL'}
             </button>
           ))}
         </div>
       </div>
 
-      {activeTab === 'messages' ? (
+      {activeTab === 'profile' ? (
+        <ProfileEdit userId={currentUserId} />
+      ) : activeTab === 'messages' ? (
         <div className="grid lg:grid-cols-3 gap-12">
           <div className="lg:col-span-1 bg-white p-12 rounded-[56px] shadow-2xl border border-gray-50 h-fit">
             <div className="w-20 h-20 bg-ivoryOrange/10 text-ivoryOrange rounded-[32px] flex items-center justify-center mb-10">
@@ -154,7 +156,7 @@ const AdminPanel: React.FC<{ currentUserId: string }> = ({ currentUserId }) => {
             <button onClick={handleSendGlobal} className="w-full py-5 bg-ivoryGreen text-white rounded-3xl font-black text-lg shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4"><Send size={24}/> DIFFUSER</button>
           </div>
           <div className="lg:col-span-2">
-             <ChatWindow currentUser={storage.getUsers().find(u => u.id === currentUserId)!} />
+             <ChatWindow currentUser={currentUser} />
           </div>
         </div>
       ) : activeTab === 'courses' ? (

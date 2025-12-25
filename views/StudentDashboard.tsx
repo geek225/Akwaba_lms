@@ -123,7 +123,15 @@ const StudentDashboard: React.FC<{ initialCourse: Course | null, currentUser: Us
             {!showQuiz ? (
               <>
                 <div className="aspect-video bg-black rounded-[56px] overflow-hidden border-[12px] border-white shadow-2xl relative">
-                  {module.videoUrl ? <iframe className="w-full h-full" src={module.videoUrl} frameBorder="0" allowFullScreen></iframe> : <div className="w-full h-full flex items-center justify-center text-gray-500 font-black uppercase text-xs tracking-widest">Vidéo indisponible</div>}
+                  {module.videoUrl ? (
+                    module.videoType === 'url' ? (
+                       <iframe className="w-full h-full" src={getEmbedUrl(module.videoUrl)} frameBorder="0" allowFullScreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+                    ) : (
+                       <video controls className="w-full h-full object-contain" src={module.videoUrl}></video>
+                    )
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-500 font-black uppercase text-xs tracking-widest">Vidéo indisponible</div>
+                  )}
                 </div>
                 <div className="bg-white p-16 rounded-[56px] shadow-sm border border-gray-100 relative">
                   <div className="flex flex-col md:flex-row justify-between items-start gap-8 mb-12">
