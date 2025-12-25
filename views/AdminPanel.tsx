@@ -4,10 +4,12 @@ import { storage } from '../utils/storage';
 import { User, UserRole, Course, Enrollment, ChatMessage, AccessCode } from '../types';
 import { Search, UserPlus, X, Edit2, Trash2, Save, Filter, BookOpen, MessageSquare, Send, Paperclip, AlertTriangle, Key, Copy, Check } from 'lucide-react';
 import InstructorSpace from './InstructorSpace'; // Récupération pour l'édition globale
+import ProfileEdit from '../components/ProfileEdit';
 import ChatWindow from '../components/ChatWindow';
 
-const AdminPanel: React.FC<{ currentUserId: string }> = ({ currentUserId }) => {
-  const [activeTab, setActiveTab] = useState<'staff' | 'students' | 'courses' | 'messages' | 'codes'>('staff');
+const AdminPanel: React.FC<{ currentUser: User }> = ({ currentUser }) => {
+  const currentUserId = currentUser.id;
+  const [activeTab, setActiveTab] = useState<'staff' | 'students' | 'courses' | 'messages' | 'codes' | 'profile'>('staff');
   const [users, setUsers] = useState<User[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
