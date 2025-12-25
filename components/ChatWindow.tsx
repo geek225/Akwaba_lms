@@ -7,7 +7,7 @@ import { Send, Paperclip, FileText, CheckCircle2, User as UserIcon, X, Download,
 const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [contacts, setContacts] = useState<User[]>([]);
-  const [selectedContact, setSelectedContact] = useState<User | 'global' | null>('global');
+  const [selectedContact, setSelectedContact] = useState<User | 'global' | null>(null);
   const [inputText, setInputText] = useState('');
   const [file, setFile] = useState<{name: string, data: string, size: number, type: string} | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -111,13 +111,13 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
   };
 
   return (
-    <div className="flex bg-white rounded-[48px] shadow-2xl border border-gray-100 overflow-hidden h-[750px] animate-in slide-in-from-right duration-500">
-      <div className="w-80 border-r border-gray-50 flex flex-col bg-gray-50/20">
-        <div className="p-8 border-b bg-white">
+    <div className="flex bg-white rounded-3xl md:rounded-[48px] shadow-2xl border border-gray-100 overflow-hidden h-[80vh] md:h-[750px] animate-in slide-in-from-right duration-500">
+      <div className={`flex-col bg-gray-50/20 border-r border-gray-50 transition-all duration-300 ${selectedContact ? 'hidden md:flex' : 'flex w-full'} md:w-80`}>
+        <div className="p-6 md:p-8 border-b bg-white">
            <h3 className="font-black text-gray-900 uppercase text-xs tracking-widest">Messagerie</h3>
         </div>
         <div className="flex-grow overflow-y-auto">
-          <button onClick={() => setSelectedContact('global')} className={`w-full p-6 text-left flex items-center gap-4 border-b border-gray-50 transition-all ${selectedContact === 'global' ? 'bg-ivoryGreen text-white' : 'hover:bg-gray-50'}`}>
+          <button onClick={() => setSelectedContact('global')} className={`w-full p-4 md:p-6 text-left flex items-center gap-4 border-b border-gray-50 transition-all ${selectedContact === 'global' ? 'bg-ivoryGreen text-white' : 'hover:bg-gray-50'}`}>
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black ${selectedContact === 'global' ? 'bg-white/20' : 'bg-ivoryOrange text-white'}`}>@</div>
             <div>
               <p className="font-black text-sm">Général</p>
@@ -125,7 +125,7 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             </div>
           </button>
           {contacts.map(u => (
-            <button key={u.id} onClick={() => setSelectedContact(u)} className={`w-full p-6 text-left flex items-center gap-4 border-b border-gray-50 transition-all ${selectedContact !== 'global' && selectedContact?.id === u.id ? 'bg-ivoryGreen text-white' : 'hover:bg-gray-50'}`}>
+            <button key={u.id} onClick={() => setSelectedContact(u)} className={`w-full p-4 md:p-6 text-left flex items-center gap-4 border-b border-gray-50 transition-all ${selectedContact !== 'global' && selectedContact?.id === u.id ? 'bg-ivoryGreen text-white' : 'hover:bg-gray-50'}`}>
               <img src={u.avatar} className="w-12 h-12 rounded-2xl object-cover" />
               <div>
                 <p className="font-black text-sm">{u.firstName} {u.name}</p>
@@ -136,11 +136,14 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
         </div>
       </div>
 
-      <div className="flex-grow flex flex-col bg-gray-50/50 relative">
+      <div className={`flex-grow flex-col bg-gray-50/50 relative ${selectedContact ? 'flex' : 'hidden md:flex'}`}>
         {selectedContact ? (
           <>
-            <div className="p-8 bg-white border-b flex items-center justify-between shadow-sm relative z-10">
+            <div className="p-4 md:p-8 bg-white border-b flex items-center justify-between shadow-sm relative z-10">
               <div className="flex items-center gap-4">
+                <button onClick={() => setSelectedContact(null)} className="md:hidden p-2 -ml-2 text-gray-400 hover:text-gray-900">
+                  <ArrowLeft size={24} />
+                </button>
                 {selectedContact === 'global' ? (
                   <div className="w-14 h-14 rounded-2xl bg-ivoryOrange flex items-center justify-center text-white font-black text-xl shadow-lg">@</div>
                 ) : (

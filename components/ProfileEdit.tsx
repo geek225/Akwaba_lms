@@ -74,30 +74,30 @@ const ProfileEdit: React.FC<{ userId: string; initialUser?: User }> = ({ userId,
   if (!user) return null;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-12 animate-in slide-in-from-bottom-10 duration-500 pb-20">
-      <div className="bg-white rounded-[56px] p-12 shadow-2xl border border-gray-100 relative overflow-hidden">
+    <div className="max-w-4xl mx-auto space-y-8 md:space-y-12 animate-in slide-in-from-bottom-10 duration-500 pb-20">
+      <div className="bg-white rounded-[32px] md:rounded-[56px] p-6 md:p-12 shadow-2xl border border-gray-100 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-ivoryGreen/5 rounded-full -mr-32 -mt-32"></div>
-        <div className="flex flex-col md:flex-row items-center gap-12 relative z-10">
+        <div className="flex flex-col md:flex-row items-center gap-6 md:gap-12 relative z-10">
           <div className="relative group">
-            <img src={formData.avatar || `https://ui-avatars.com/api/?name=${formData.name}&background=random`} className="w-48 h-48 rounded-[48px] object-cover border-8 border-white shadow-2xl" />
-            <div className="absolute -bottom-4 -right-4 bg-ivoryOrange text-white p-4 rounded-2xl shadow-xl">
-              <ImageIcon size={24} />
+            <img src={formData.avatar || `https://ui-avatars.com/api/?name=${formData.name}&background=random`} className="w-32 h-32 md:w-48 md:h-48 rounded-[32px] md:rounded-[48px] object-cover border-4 md:border-8 border-white shadow-2xl" />
+            <div className="absolute -bottom-2 -right-2 md:-bottom-4 md:-right-4 bg-ivoryOrange text-white p-3 md:p-4 rounded-2xl shadow-xl">
+              <ImageIcon size={20} className="md:w-6 md:h-6" />
             </div>
           </div>
           <div className="flex-grow space-y-2 text-center md:text-left">
-            <h2 className="text-5xl font-black text-gray-900 tracking-tighter leading-tight">
+            <h2 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tighter leading-tight">
               {formData.firstName} {formData.name}
             </h2>
-            <p className="text-xl font-bold text-ivoryGreen flex items-center justify-center md:justify-start gap-2 uppercase tracking-widest text-xs">
+            <p className="text-sm md:text-xl font-bold text-ivoryGreen flex items-center justify-center md:justify-start gap-2 uppercase tracking-widest text-xs">
               <UserIcon size={16}/> {user.role} • Membre Actif
             </p>
           </div>
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8">
-        <div className="bg-white p-10 rounded-[48px] shadow-xl border border-gray-100 space-y-8">
-          <h3 className="text-2xl font-black flex items-center gap-3 text-ivoryOrange"><Info/> Identité & Visuel</h3>
+      <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+        <div className="bg-white p-6 md:p-10 rounded-[32px] md:rounded-[48px] shadow-xl border border-gray-100 space-y-6 md:space-y-8">
+          <h3 className="text-xl md:text-2xl font-black flex items-center gap-3 text-ivoryOrange"><Info/> Identité & Visuel</h3>
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
