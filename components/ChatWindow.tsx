@@ -74,6 +74,8 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
       createdAt: new Date().toISOString()
     };
 
+    let sentViaSupabase = false;
+
     if (supabase) {
         // Envoi vers Supabase
         const { error } = await supabase.from('messages').insert({
@@ -88,12 +90,14 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
         });
 
         if (error) {
-            console.error("Erreur d'envoi:", error);
-            alert("Erreur lors de l'envoi du message. Vérifiez votre connexion.");
-            return;
+            console.warn("Erreur Supabase, bascule sur stockage local:", error);
+            // On continue vers le fallback local au lieu de bloquer
+        } else {
+            sentViaSupabase = true;
         }
-        // Pas besoin de setMessages ici car le channel 'postgres_changes' va le recevoir
-    } else {
+    }
+
+    if (!sentViaSupabase) {
         // Fallback LocalStorage
         const newMessage: ChatMessage = {
             id: `m-${Date.now()}`,
