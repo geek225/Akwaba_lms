@@ -6,6 +6,14 @@ export enum UserRole {
   ADMIN = 'Administrateur'
 }
 
+export interface AccessCode {
+  code: string;
+  role: UserRole;
+  isUsed: boolean;
+  generatedBy: string; // Admin ID
+  createdAt: string;
+}
+
 export interface User {
   id: string;
   name: string;

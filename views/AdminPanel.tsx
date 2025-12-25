@@ -1,17 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { storage } from '../utils/storage';
-import { User, UserRole, Course, Enrollment, ChatMessage } from '../types';
-import { Search, UserPlus, X, Edit2, Trash2, Save, Filter, BookOpen, MessageSquare, Send, Paperclip, AlertTriangle } from 'lucide-react';
+import { User, UserRole, Course, Enrollment, ChatMessage, AccessCode } from '../types';
+import { Search, UserPlus, X, Edit2, Trash2, Save, Filter, BookOpen, MessageSquare, Send, Paperclip, AlertTriangle, Key, Copy, Check } from 'lucide-react';
 import InstructorSpace from './InstructorSpace'; // Récupération pour l'édition globale
 import ChatWindow from '../components/ChatWindow';
 
 const AdminPanel: React.FC<{ currentUserId: string }> = ({ currentUserId }) => {
-  const [activeTab, setActiveTab] = useState<'staff' | 'students' | 'courses' | 'messages'>('staff');
+  const [activeTab, setActiveTab] = useState<'staff' | 'students' | 'courses' | 'messages' | 'codes'>('staff');
   const [users, setUsers] = useState<User[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
-  
+  const [accessCodes, setAccessCodes] = useState<AccessCode[]>([]);
+
   // Modals
   const [showUserModal, setShowUserModal] = useState(false);
   const [showEnrollModal, setShowEnrollModal] = useState(false);
@@ -29,11 +30,16 @@ const AdminPanel: React.FC<{ currentUserId: string }> = ({ currentUserId }) => {
   const [userFormData, setUserFormData] = useState<Partial<User>>({});
   const [enrollFormData, setEnrollFormData] = useState({ userId: '', courseId: '' });
   const [globalMessage, setGlobalMessage] = useState('');
+  
+  // Access Codes
+  const [codeRole, setCodeRole] = useState<UserRole>(UserRole.INSTRUCTOR);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const loadAll = () => {
     setUsers(storage.getUsers());
     setCourses(storage.getCourses());
     setEnrollments(storage.getEnrollments());
+    setAccessCodes(storage.getAccessCodes());
   };
 
   useEffect(() => {
@@ -41,6 +47,17 @@ const AdminPanel: React.FC<{ currentUserId: string }> = ({ currentUserId }) => {
     window.addEventListener('storage_update', loadAll);
     return () => window.removeEventListener('storage_update', loadAll);
   }, []);
+
+  const handleGenerateCode = () => {
+    storage.generateAccessCode(codeRole, currentUserId);
+    // Auto refresh handled by event listener
+  };
+
+  const handleCopyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(code);
+    setTimeout(() => setCopiedCode(null), 2000);
+  };
 
   const handleSaveUser = (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,9 +151,9 @@ const AdminPanel: React.FC<{ currentUserId: string }> = ({ currentUserId }) => {
           <p className="text-gray-400 font-bold uppercase text-[10px] tracking-[0.4em] mt-2">PLATEFORME AKWABA • ABIDJAN</p>
         </div>
         <div className="flex bg-white p-1.5 rounded-[24px] shadow-sm border border-gray-100">
-          {(['staff', 'students', 'courses', 'messages', 'profile'] as const).map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)} className={`px-8 py-3.5 rounded-[18px] font-black text-[10px] transition-all uppercase tracking-widest ${activeTab === tab ? 'bg-ivoryGreen text-white shadow-xl' : 'text-gray-400 hover:text-gray-600'}`}>
-              {tab === 'staff' ? 'ÉQUIPE' : tab === 'students' ? 'ÉLÈVES' : tab === 'courses' ? 'COURS' : tab === 'messages' ? 'MESSAGES' : 'MON PROFIL'}
+          {(['staff', 'students', 'courses', 'messages', 'codes', 'profile'] as const).map(tab => (
+            <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-3.5 rounded-[18px] font-black text-[10px] transition-all uppercase tracking-widest ${activeTab === tab ? 'bg-ivoryGreen text-white shadow-xl' : 'text-gray-400 hover:text-gray-600'}`}>
+              {tab === 'staff' ? 'ÉQUIPE' : tab === 'students' ? 'ÉLÈVES' : tab === 'courses' ? 'COURS' : tab === 'messages' ? 'MESSAGES' : tab === 'codes' ? 'CODES ACCÈS' : 'MON PROFIL'}
             </button>
           ))}
         </div>
@@ -144,6 +161,72 @@ const AdminPanel: React.FC<{ currentUserId: string }> = ({ currentUserId }) => {
 
       {activeTab === 'profile' ? (
         <ProfileEdit userId={currentUserId} />
+      ) : activeTab === 'codes' ? (
+        <div className="grid lg:grid-cols-3 gap-12">
+            <div className="lg:col-span-1 bg-white p-12 rounded-[56px] shadow-2xl border border-gray-50 h-fit">
+                <div className="w-20 h-20 bg-ivoryOrange/10 text-ivoryOrange rounded-[32px] flex items-center justify-center mb-10">
+                    <Key size={40} />
+                </div>
+                <h2 className="text-3xl font-black mb-6 text-gray-900 tracking-tighter leading-none">Générateur de Codes</h2>
+                <p className="text-gray-400 font-bold text-sm mb-10 leading-relaxed">Créez des codes d'accès uniques pour permettre l'inscription directe de Formateurs, Éditeurs ou Administrateurs.</p>
+                
+                <div className="space-y-4">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Rôle à attribuer</label>
+                    <select value={codeRole} onChange={e => setCodeRole(e.target.value as UserRole)} className="w-full p-6 bg-gray-50 rounded-3xl border-2 border-transparent focus:border-ivoryOrange focus:bg-white outline-none font-bold text-gray-900 mb-6 shadow-inner transition-all appearance-none">
+                        <option value={UserRole.INSTRUCTOR}>FORMATEUR</option>
+                        <option value={UserRole.EDITOR}>ÉDITEUR</option>
+                        <option value={UserRole.ADMIN}>ADMINISTRATEUR</option>
+                    </select>
+                </div>
+
+                <button onClick={handleGenerateCode} className="w-full py-5 bg-ivoryGreen text-white rounded-3xl font-black text-lg shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4">
+                    <Key size={24}/> GÉNÉRER LE CODE
+                </button>
+            </div>
+
+            <div className="lg:col-span-2 space-y-6">
+                <h3 className="text-2xl font-black text-gray-900 mb-6">Codes Actifs</h3>
+                {accessCodes.filter(c => !c.isUsed).length === 0 ? (
+                    <div className="p-12 text-center bg-gray-50 rounded-[32px] border border-dashed border-gray-200">
+                        <p className="text-gray-400 font-bold">Aucun code actif pour le moment.</p>
+                    </div>
+                ) : (
+                    <div className="grid md:grid-cols-2 gap-6">
+                        {accessCodes.filter(c => !c.isUsed).map(code => (
+                            <div key={code.code} className="bg-white p-8 rounded-[32px] shadow-lg border border-gray-50 flex flex-col justify-between group hover:border-ivoryOrange transition-colors">
+                                <div>
+                                    <div className="flex justify-between items-start mb-4">
+                                        <span className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest ${code.role === UserRole.ADMIN ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-blue-500'}`}>
+                                            {code.role}
+                                        </span>
+                                        <span className="text-[10px] font-bold text-gray-300">{new Date(code.createdAt).toLocaleDateString()}</span>
+                                    </div>
+                                    <div className="text-3xl font-black text-gray-900 tracking-wider font-mono mb-2">{code.code}</div>
+                                    <p className="text-xs text-gray-400 font-medium">Généré par Admin</p>
+                                </div>
+                                <button 
+                                    onClick={() => handleCopyCode(code.code)}
+                                    className="mt-6 w-full py-3 bg-gray-50 text-gray-600 rounded-xl font-bold text-sm hover:bg-ivoryOrange hover:text-white transition-all flex items-center justify-center gap-2"
+                                >
+                                    {copiedCode === code.code ? <Check size={18}/> : <Copy size={18}/>}
+                                    {copiedCode === code.code ? 'COPIÉ !' : 'COPIER LE CODE'}
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                <h3 className="text-2xl font-black text-gray-900 mb-6 mt-12 opacity-50">Historique (Codes Utilisés)</h3>
+                <div className="opacity-50 pointer-events-none">
+                     {accessCodes.filter(c => c.isUsed).slice(0, 5).map(code => (
+                        <div key={code.code} className="flex items-center justify-between p-4 border-b border-gray-100">
+                            <span className="font-mono font-bold text-gray-500 line-through">{code.code}</span>
+                            <span className="text-xs font-bold uppercase">{code.role}</span>
+                        </div>
+                     ))}
+                </div>
+            </div>
+        </div>
       ) : activeTab === 'messages' ? (
         <div className="grid lg:grid-cols-3 gap-12">
           <div className="lg:col-span-1 bg-white p-12 rounded-[56px] shadow-2xl border border-gray-50 h-fit">

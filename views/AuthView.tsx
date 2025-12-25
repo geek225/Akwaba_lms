@@ -206,6 +206,8 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
                        type="text" 
                        placeholder="Code secret..." 
                        id="accessCode"
+                       value={accessCode}
+                       onChange={(e) => setAccessCode(e.target.value)}
                        className="w-full pl-6 pr-4 py-4 rounded-3xl border-2 border-dashed border-gray-200 bg-gray-50 focus:bg-white focus:border-ivoryOrange outline-none font-bold text-gray-900 text-md shadow-sm transition-all" 
                      />
                      <Lock className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
