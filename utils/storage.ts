@@ -32,8 +32,24 @@ export const storage = {
   saveUsers: (users: User[]) => {
     localStorage.setItem(USERS_KEY, JSON.stringify(users));
     window.dispatchEvent(new Event('storage_update'));
+    
+    // Synchronisation vers Supabase pour que le Chat fonctionne avec tous les utilisateurs
     if (supabase) {
-      // Logique de sync optionnelle
+      users.forEach(async (u) => {
+        try {
+          const { error } = await supabase.from('users').upsert({
+            id: u.id,
+            email: u.email,
+            name: u.name,
+            first_name: u.firstName,
+            role: u.role,
+            avatar: u.avatar
+          });
+          if (error) console.error("Erreur sync user Supabase:", u.name, error);
+        } catch (e) {
+          console.error("Exception sync user Supabase:", e);
+        }
+      });
     }
   },
   getCourses: (): Course[] => {
@@ -147,6 +163,14 @@ export const storage = {
         { userId: 'u1', courseId: 'c1', enrolledAt: new Date().toISOString(), progress: 0 }
       ];
       storage.saveEnrollments(mockEnrolls);
+    }
+
+    // Force la synchronisation des utilisateurs vers Supabase au démarrage
+    if (supabase) {
+      const current = storage.getUsers();
+      if (current.length > 0) {
+        storage.saveUsers(current);
+      }
     }
   }
 };
