@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, ChatMessage, UserRole } from '../types';
 import { storage } from '../utils/storage';
-import { Send, Paperclip, FileText, CheckCircle2, User as UserIcon, X, Download, MessageSquare, Play, Maximize2 } from 'lucide-react';
+import { Send, Paperclip, FileText, CheckCircle2, User as UserIcon, X, Download, MessageSquare, Play, Maximize2, ArrowLeft } from 'lucide-react';
 
 const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);

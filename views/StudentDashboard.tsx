@@ -18,6 +18,15 @@ const StudentDashboard: React.FC<{ initialCourse: Course | null, currentUser: Us
   const [currentQuizAnswers, setCurrentQuizAnswers] = useState<number[]>([]);
   const [quizResult, setQuizResult] = useState<{ score: number, total: number } | null>(null);
 
+  const getEmbedUrl = (url: string) => {
+    if (!url) return '';
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      const videoId = url.split('v=')[1] || url.split('/').pop();
+      return `https://www.youtube.com/embed/${videoId}`;
+    }
+    return url;
+  };
+
   useEffect(() => {
     const load = () => {
       const all = storage.getCourses().filter(c => !c.isDraft);
