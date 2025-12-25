@@ -85,10 +85,21 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
         }
       } else {
         // Registration Logic
+        let assignedRole = UserRole.STUDENT;
+
         if (!isLogin) {
             const phoneRegex = /^\+[0-9]+$/;
             if (phone && !phoneRegex.test(phone.replace(/\s/g, ''))) {
                 throw new Error("Format de téléphone invalide. Utilisez le format international avec uniquement des chiffres (ex: +2250700000000). Pas de lettres.");
+            }
+
+            if (accessCode.trim()) {
+                const role = storage.validateAndUseCode(accessCode.trim());
+                if (role) {
+                    assignedRole = role;
+                } else {
+                    throw new Error("Code d'accès invalide ou déjà utilisé.");
+                }
             }
         }
 
@@ -101,7 +112,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
               phone,
               country,
               city,
-              role: UserRole.STUDENT, // Default role
+              role: assignedRole,
             },
           },
         });
