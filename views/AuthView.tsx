@@ -128,6 +128,21 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
         console.error("Auth error:", err);
         // Fallback for demo accounts if Supabase fails or not configured
         if (isLogin && (email.includes('@akwaba.ci'))) {
+            // FORCE ADMIN LOGIN (Secours)
+            if (email.trim().toLowerCase() === 'admin@akwaba.ci' && password === '123456') {
+                 const adminUser: User = { 
+                    id: 'u3', 
+                    name: 'Admin', 
+                    firstName: 'Akwaba', 
+                    email: 'admin@akwaba.ci', 
+                    role: UserRole.ADMIN, 
+                    avatar: 'https://i.pravatar.cc/150?u=u3', 
+                    createdAt: new Date().toISOString()
+                 };
+                 onLogin(adminUser);
+                 return;
+            }
+
             const allUsers = storage.getUsers();
             const existing = allUsers.find(u => u.email.toLowerCase().trim() === email.toLowerCase().trim());
             if (existing) {
