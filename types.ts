@@ -14,6 +14,7 @@ export interface User {
   role: UserRole;
   avatar: string;
   phone?: string;
+  country?: string;
   city?: string;
   bio?: string;
   createdAt: string;

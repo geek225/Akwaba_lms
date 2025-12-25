@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
 import { storage } from '../utils/storage';
-import { Mail, Lock } from 'lucide-react';
+import { supabase } from '../utils/supabaseClient';
+import { Mail, Lock, Eye, EyeOff, User as UserIcon, Phone, MapPin, Globe } from 'lucide-react';
 
 interface AuthViewProps {
   onLogin: (user: User) => void;
@@ -10,37 +11,95 @@ interface AuthViewProps {
 
 const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Form fields
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState(''); // Nom complet
+  const [phone, setPhone] = useState('');
+  const [country, setCountry] = useState('');
+  const [city, setCity] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const allUsers = storage.getUsers();
-    const existing = allUsers.find(u => u.email.toLowerCase().trim() === email.toLowerCase().trim());
-    
-    if (existing) {
-      onLogin(existing);
-    } else {
+    setError(null);
+    setLoading(true);
+
+    try {
       if (isLogin) {
-        alert("Ce compte n'est pas enregistré localement.");
+        // Login Logic
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+
+        if (data.user) {
+            // Fetch user profile or use metadata
+            const metadata = data.user.user_metadata || {};
+            
+            const loggedUser: User = {
+                id: data.user.id,
+                email: data.user.email || email,
+                name: metadata.full_name || 'Utilisateur',
+                firstName: '', // Can be parsed from name if needed
+                role: (metadata.role as UserRole) || UserRole.STUDENT,
+                avatar: `https://i.pravatar.cc/150?u=${data.user.email}`,
+                phone: metadata.phone,
+                country: metadata.country,
+                city: metadata.city,
+                createdAt: data.user.created_at || new Date().toISOString()
+            };
+            
+            onLogin(loggedUser);
+        }
       } else {
-        const newUser: User = {
-          id: `u-${Date.now()}`,
-          name: 'Utilisateur',
-          firstName: 'Nouveau',
-          email: email,
-          role: UserRole.STUDENT,
-          avatar: `https://i.pravatar.cc/150?u=${email}`,
-          createdAt: new Date().toISOString()
-        };
-        const updatedUsers = [...allUsers, newUser];
-        storage.saveUsers(updatedUsers);
-        onLogin(newUser);
+        // Registration Logic
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: name,
+              phone,
+              country,
+              city,
+              role: UserRole.STUDENT, // Default role
+            },
+          },
+        });
+
+        if (error) throw error;
+
+        if (data.user) {
+            alert('Inscription réussie ! Veuillez vérifier votre boîte mail pour confirmer votre compte avant de vous connecter.');
+            setIsLogin(true);
+        }
       }
+    } catch (err: any) {
+        console.error("Auth error:", err);
+        // Fallback for demo accounts if Supabase fails or not configured
+        if (isLogin && (email.includes('@akwaba.ci'))) {
+            const allUsers = storage.getUsers();
+            const existing = allUsers.find(u => u.email.toLowerCase().trim() === email.toLowerCase().trim());
+            if (existing) {
+                onLogin(existing);
+                return;
+            }
+        }
+        setError(err.message || "Une erreur est survenue");
+    } finally {
+      setLoading(false);
     }
   };
 
   const fillTestAccount = (testEmail: string) => {
     setEmail(testEmail);
+    setPassword('123456'); // Default password for testing
     setIsLogin(true);
   };
 
@@ -58,7 +117,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
           </div>
           
           <div className="mt-12 pt-10 border-t border-white/10 relative z-10">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-ivoryOrange mb-6">Accès Rapides</h4>
+            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-ivoryOrange mb-6">Accès Rapides (Démo)</h4>
             <div className="space-y-3">
               <button onClick={() => fillTestAccount('admin@akwaba.ci')} className="w-full text-left px-4 py-3 bg-white/5 rounded-2xl text-xs font-bold border border-white/5 hover:bg-white/10 flex justify-between items-center transition-all">
                 <span>ADMIN</span>
@@ -76,9 +135,82 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
           </div>
         </div>
 
-        <div className="p-16 md:w-3/5">
-          <h1 className="text-4xl font-black text-gray-900 mb-10">{isLogin ? 'Connexion' : 'Inscription'}</h1>
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="p-16 md:w-3/5 overflow-y-auto max-h-[90vh]">
+          <h1 className="text-4xl font-black text-gray-900 mb-2">{isLogin ? 'Connexion' : 'Inscription'}</h1>
+          <p className="text-gray-400 mb-8">{isLogin ? 'Ravis de vous revoir !' : 'Créez votre compte pour commencer.'}</p>
+          
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-bold border border-red-100">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {!isLogin && (
+              <>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nom complet</label>
+                  <div className="relative">
+                    <input 
+                      required 
+                      type="text" 
+                      placeholder="Kouamé Koffi Jean" 
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full pl-14 pr-6 py-4 rounded-3xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-ivoryOrange outline-none font-bold text-gray-900 text-lg shadow-sm transition-all" 
+                    />
+                    <UserIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Téléphone</label>
+                    <div className="relative">
+                        <input 
+                        required 
+                        type="tel" 
+                        placeholder="+225 07..." 
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="w-full pl-12 pr-4 py-4 rounded-3xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-ivoryOrange outline-none font-bold text-gray-900 text-md shadow-sm transition-all" 
+                        />
+                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                    </div>
+                    </div>
+                    <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Pays</label>
+                    <div className="relative">
+                        <input 
+                        required 
+                        type="text" 
+                        placeholder="Côte d'Ivoire" 
+                        value={country}
+                        onChange={(e) => setCountry(e.target.value)}
+                        className="w-full pl-12 pr-4 py-4 rounded-3xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-ivoryOrange outline-none font-bold text-gray-900 text-md shadow-sm transition-all" 
+                        />
+                        <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                    </div>
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Ville</label>
+                  <div className="relative">
+                    <input 
+                      required 
+                      type="text" 
+                      placeholder="Abidjan" 
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      className="w-full pl-14 pr-6 py-4 rounded-3xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-ivoryOrange outline-none font-bold text-gray-900 text-lg shadow-sm transition-all" 
+                    />
+                    <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
+                  </div>
+                </div>
+              </>
+            )}
+
             <div className="space-y-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Email</label>
               <div className="relative">
@@ -88,28 +220,43 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
                   placeholder="votre@email.ci" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-14 pr-6 py-5 rounded-3xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-ivoryOrange outline-none font-bold text-gray-900 text-lg shadow-sm transition-all" 
+                  className="w-full pl-14 pr-6 py-4 rounded-3xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-ivoryOrange outline-none font-bold text-gray-900 text-lg shadow-sm transition-all" 
                 />
                 <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
               </div>
             </div>
+
             <div className="space-y-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Mot de passe</label>
               <div className="relative">
                 <input 
                   required 
-                  type="password" 
+                  type={showPassword ? "text" : "password"}
                   placeholder="••••••••" 
-                  className="w-full pl-14 pr-6 py-5 rounded-3xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-ivoryOrange outline-none font-bold text-gray-900 text-lg shadow-sm transition-all" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-14 pr-12 py-4 rounded-3xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-ivoryOrange outline-none font-bold text-gray-900 text-lg shadow-sm transition-all" 
                 />
                 <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
+                <button 
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-ivoryOrange transition-colors"
+                >
+                  {showPassword ? <EyeOff size={24} /> : <Eye size={24} />}
+                </button>
               </div>
             </div>
-            <button type="submit" className="w-full py-6 bg-ivoryOrange text-white rounded-3xl font-black text-xl shadow-2xl shadow-orange-100 hover:bg-orange-600 hover:-translate-y-1 active:translate-y-0 transition-all mt-8">
-              {isLogin ? 'Accéder à mon espace' : "Créer mon profil"}
+
+            <button 
+                type="submit" 
+                disabled={loading}
+                className="w-full py-6 bg-ivoryOrange text-white rounded-3xl font-black text-xl shadow-2xl shadow-orange-100 hover:bg-orange-600 hover:-translate-y-1 active:translate-y-0 transition-all mt-8 disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Chargement...' : (isLogin ? 'Accéder à mon espace' : "Créer mon profil")}
             </button>
           </form>
-          <button onClick={() => setIsLogin(!isLogin)} className="w-full mt-10 text-sm font-black text-ivoryGreen hover:text-green-700 transition-colors">
+          <button onClick={() => { setIsLogin(!isLogin); setError(null); }} className="w-full mt-10 text-sm font-black text-ivoryGreen hover:text-green-700 transition-colors">
             {isLogin ? "PAS ENCORE DE COMPTE ? S'INSCRIRE" : "DÉJÀ UN COMPTE ? SE CONNECTER"}
           </button>
         </div>
