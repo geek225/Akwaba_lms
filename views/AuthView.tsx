@@ -14,6 +14,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   // Form fields
   const [email, setEmail] = useState('');
@@ -22,6 +23,31 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
   const [phone, setPhone] = useState('');
   const [country, setCountry] = useState('');
   const [city, setCity] = useState('');
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin,
+        });
+
+        if (error) throw error;
+        alert("Si cet email existe, un lien de réinitialisation vous a été envoyé.");
+        setIsResetting(false);
+    } catch (err: any) {
+        // Fallback for local testing
+        if (email.includes('@akwaba.ci')) {
+             alert("Mode démo : Contactez l'administrateur pour réinitialiser ce compte de test.");
+        } else {
+             setError("Impossible d'envoyer l'email. Vérifiez votre connexion.");
+        }
+    } finally {
+        setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -232,7 +258,14 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Mot de passe</label>
+              <div className="flex justify-between items-center ml-1">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Mot de passe</label>
+                {isLogin && (
+                    <button type="button" onClick={() => { setIsResetting(true); setError(null); }} className="text-[10px] font-black text-ivoryOrange uppercase tracking-widest hover:text-orange-600 transition-colors">
+                        Oublié ?
+                    </button>
+                )}
+              </div>
               <div className="relative">
                 <input 
                   required 
@@ -264,6 +297,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
           <button onClick={() => { setIsLogin(!isLogin); setError(null); }} className="w-full mt-10 text-sm font-black text-ivoryGreen hover:text-green-700 transition-colors">
             {isLogin ? "PAS ENCORE DE COMPTE ? S'INSCRIRE" : "DÉJÀ UN COMPTE ? SE CONNECTER"}
           </button>
+          )}
         </div>
       </div>
     </div>
