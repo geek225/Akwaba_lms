@@ -59,6 +59,13 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
         }
       } else {
         // Registration Logic
+        if (!isLogin) {
+            const phoneRegex = /^\+[0-9]+$/;
+            if (phone && !phoneRegex.test(phone.replace(/\s/g, ''))) {
+                throw new Error("Format de téléphone invalide. Utilisez le format international avec uniquement des chiffres (ex: +2250700000000). Pas de lettres.");
+            }
+        }
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,

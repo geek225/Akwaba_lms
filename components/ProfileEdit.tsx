@@ -21,10 +21,10 @@ const ProfileEdit: React.FC<{ userId: string }> = ({ userId }) => {
   const handleSave = async () => {
     if (!formData.name || !formData.firstName) return alert("Le nom et le prénom sont requis.");
     
-    // Validation basique du téléphone international
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    // Validation stricte du téléphone international (uniquement chiffres et + au début)
+    const phoneRegex = /^\+[0-9]+$/;
     if (formData.phone && !phoneRegex.test(formData.phone.replace(/\s/g, ''))) {
-      return alert("Format de téléphone invalide. Utilisez le format international (ex: +225 0700000000)");
+      return alert("Format de téléphone invalide. Utilisez le format international avec uniquement des chiffres (ex: +2250700000000). Pas de lettres.");
     }
 
     setLoading(true);
@@ -144,8 +144,11 @@ const ProfileEdit: React.FC<{ userId: string }> = ({ userId }) => {
                 <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
                 <input 
                   value={formData.phone || ''} 
-                  onChange={e => setFormData({...formData, phone: e.target.value})} 
-                  placeholder="+225 07 00 00 00 00" 
+                  onChange={e => {
+                    const val = e.target.value.replace(/[^0-9+]/g, '');
+                    setFormData({...formData, phone: val});
+                  }} 
+                  placeholder="+2250700000000" 
                   className="w-full pl-12 p-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-ivoryOrange focus:bg-white text-gray-900 font-bold outline-none transition-all" 
                 />
               </div>

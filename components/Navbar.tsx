@@ -27,6 +27,8 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser, onLogout, onGoHome, onGoDa
 
         <div className="hidden md:flex items-center gap-8 font-bold text-sm text-gray-500">
           <button onClick={onGoHome} className="hover:text-ivoryOrange transition-colors">Accueil</button>
+          <button onClick={onGoBlog} className="hover:text-ivoryOrange transition-colors">Blog</button>
+          <button onClick={onGoContact} className="hover:text-ivoryOrange transition-colors">Contact</button>
           {currentUser && <button onClick={onGoDashboard} className="hover:text-ivoryOrange transition-colors">Mon Espace</button>}
         </div>
 

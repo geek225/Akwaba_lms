@@ -54,6 +54,14 @@ export const storage = {
     localStorage.setItem(MESSAGES_KEY, JSON.stringify(msgs));
     window.dispatchEvent(new Event('storage_update'));
   },
+  getPosts: (): BlogPost[] => {
+    const stored = localStorage.getItem(BLOG_KEY);
+    return stored ? JSON.parse(stored) : [];
+  },
+  savePosts: (posts: BlogPost[]) => {
+    localStorage.setItem(BLOG_KEY, JSON.stringify(posts));
+    window.dispatchEvent(new Event('storage_update'));
+  },
   init: () => {
     if (!localStorage.getItem(USERS_KEY)) storage.saveUsers(MOCK_USERS);
     if (!localStorage.getItem(COURSES_KEY)) storage.saveCourses(MOCK_COURSES);

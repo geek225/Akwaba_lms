@@ -20,6 +20,18 @@ export interface User {
   createdAt: string;
 }
 
+export interface BlogPost {
+  id: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  authorId: string;
+  authorName: string;
+  coverImage: string;
+  createdAt: string;
+  isPublished: boolean;
+}
+
 export interface Enrollment {
   userId: string;
   courseId: string;

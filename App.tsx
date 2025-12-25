@@ -8,11 +8,15 @@ import StudentDashboard from './views/StudentDashboard';
 import InstructorSpace from './views/InstructorSpace';
 import AdminPanel from './views/AdminPanel';
 import AuthView from './views/AuthView';
+import ContactView from './views/ContactView';
+import BlogView from './views/BlogView';
+import BlogEditor from './views/BlogEditor';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [currentView, setCurrentView] = useState<'home' | 'dashboard' | 'auth'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'dashboard' | 'auth' | 'contact' | 'blog' | 'blog_editor'>('home');
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     storage.init();
@@ -77,8 +81,41 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col baoule-pattern">
-      <Navbar currentUser={currentUser} onLogout={handleLogout} onGoHome={() => setCurrentView('home')} onGoDashboard={() => setCurrentView('dashboard')} onGoAuth={() => setCurrentView('auth')} />
+      <Navbar 
+        currentUser={currentUser} 
+        onLogout={handleLogout} 
+        onGoHome={() => setCurrentView('home')} 
+        onGoDashboard={() => setCurrentView('dashboard')} 
+        onGoAuth={() => setCurrentView('auth')}
+        onGoContact={() => setCurrentView('contact')}
+        onGoBlog={() => setCurrentView('blog')}
+      />
       <main className="flex-grow">{renderContent()}</main>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in duration-200">
+                <h3 className="text-xl font-black text-gray-900 mb-2">Déconnexion</h3>
+                <p className="text-gray-500 font-medium mb-6">Êtes-vous sûr de vouloir vous déconnecter ?</p>
+                <div className="flex gap-3">
+                    <button 
+                        onClick={() => setShowLogoutConfirm(false)}
+                        className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+                    >
+                        Annuler
+                    </button>
+                    <button 
+                        onClick={confirmLogout}
+                        className="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition-colors shadow-lg shadow-red-200"
+                    >
+                        Se déconnecter
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
+
       <footer className="bg-white border-t py-12 mt-auto">
         <div className="container mx-auto px-4 text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
