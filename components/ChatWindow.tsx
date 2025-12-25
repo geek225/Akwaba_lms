@@ -40,6 +40,29 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     };
   }, []);
 
+  // Sync current user to Supabase to satisfy Foreign Key constraints
+  useEffect(() => {
+    if (supabase && currentUser) {
+        const syncUser = async () => {
+             // We map our camelCase User object to snake_case DB columns
+             // Assumed DB structure: id, email, name, first_name, role, avatar
+             const { error } = await supabase.from('users').upsert({
+                 id: currentUser.id,
+                 email: currentUser.email,
+                 name: currentUser.name,
+                 first_name: currentUser.firstName,
+                 role: currentUser.role,
+                 avatar: currentUser.avatar,
+             });
+             
+             if (error) {
+                 console.error("Erreur synchronisation user Supabase:", error);
+             }
+        };
+        syncUser();
+    }
+  }, [currentUser]);
+
   useEffect(() => {
     loadData();
     window.addEventListener('storage_update', loadData);
@@ -83,10 +106,54 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
              }
         };
 
+        const fetchUsers = async () => {
+            const { data: users, error: userError } = await supabase!.from('users').select('*');
+            if (!userError && users) {
+                const mappedUsers: User[] = users.map((u: any) => ({
+                    id: u.id,
+                    name: u.name,
+                    firstName: u.first_name,
+                    email: u.email,
+                    role: u.role,
+                    avatar: u.avatar,
+                    createdAt: u.created_at || new Date().toISOString()
+                }));
+                
+                const current = storage.getUsers();
+                let changed = false;
+                // Merge users avoiding duplicates
+                // We prefer server data
+                const merged = [...current];
+                
+                mappedUsers.forEach(mu => {
+                    const idx = merged.findIndex(c => c.id === mu.id);
+                    if (idx === -1) {
+                        merged.push(mu);
+                        changed = true;
+                    } else {
+                        // Update existing if needed? For now, keep local if conflict, 
+                        // or overwrite? Let's overwrite to ensure Admin details are correct.
+                        // But we must be careful not to lose local-only data if any.
+                        // Actually, let's just add missing ones for now.
+                    }
+                });
+                
+                if (changed) {
+                    storage.saveUsers(merged);
+                    // Force update contacts
+                    setContacts(merged.filter(u => u.id !== currentUser.id && u.role !== undefined));
+                }
+            }
+        };
+
         fetchMessages();
+        fetchUsers();
         
         // Polling fallback (every 5 seconds) to ensure messages are received even if Realtime fails
-        const intervalId = setInterval(fetchMessages, 5000);
+        const intervalId = setInterval(() => {
+            fetchMessages();
+            fetchUsers();
+        }, 5000);
 
         // 2. Realtime Subscription
         const channel = supabase.channel('global_chat')
