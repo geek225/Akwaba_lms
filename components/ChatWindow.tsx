@@ -254,7 +254,8 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (f) {
-      if (f.size > 100 * 1024 * 1024) return alert("Fichier trop lourd (Max 100MB)");
+      // Limite réduite à 2MB pour éviter de saturer le LocalStorage (Quota ~5MB) ou la colonne texte Supabase
+      if (f.size > 2 * 1024 * 1024) return alert("Fichier trop lourd (Max 2MB pour le moment)");
       const reader = new FileReader();
       reader.onload = (ev) => {
         setFile({ name: f.name, data: ev.target?.result as string, size: f.size, type: f.type });

@@ -49,12 +49,23 @@ export const storage = {
     window.dispatchEvent(new Event('storage_update'));
   },
   getMessages: (): ChatMessage[] => {
-    const stored = localStorage.getItem(MESSAGES_KEY);
-    return stored ? JSON.parse(stored) : [];
+    try {
+      const stored = localStorage.getItem(MESSAGES_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      console.error("Erreur lecture messages (localStorage corrompu ?):", e);
+      // En cas d'erreur (JSON invalide), on retourne un tableau vide pour ne pas crasher l'app
+      return [];
+    }
   },
   saveMessages: (msgs: ChatMessage[]) => {
-    localStorage.setItem(MESSAGES_KEY, JSON.stringify(msgs));
-    window.dispatchEvent(new Event('storage_update'));
+    try {
+      localStorage.setItem(MESSAGES_KEY, JSON.stringify(msgs));
+      window.dispatchEvent(new Event('storage_update'));
+    } catch (e) {
+      console.error("Erreur sauvegarde messages (Quota dépassé ?):", e);
+      // Optionnel : Notifier l'utilisateur ou tenter de nettoyer les vieux messages
+    }
   },
   getPosts: (): BlogPost[] => {
     const stored = localStorage.getItem(BLOG_KEY);
