@@ -22,10 +22,10 @@ export const storage = {
   getUsers: (): User[] => {
     try {
       const stored = localStorage.getItem(USERS_KEY);
-      return stored ? JSON.parse(stored) : MOCK_USERS;
+      return stored ? JSON.parse(stored) : [];
     } catch (e) {
       console.error("Erreur lecture users:", e);
-      return MOCK_USERS;
+      return [];
     }
   },
   saveUsers: (users: User[]) => {
