@@ -103,7 +103,7 @@ const InstructorSpace: React.FC<{ currentUser: User, forceEditId?: string | null
       <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-8">
         <div>
           <h1 className="text-4xl font-black text-gray-900 tracking-tighter">Gestion Formation</h1>
-          <p className="text-gray-400 font-bold uppercase text-[10px] tracking-[0.3em] mt-2">ESPACE {userRole.toUpperCase()} AKWABA</p>
+          <p className="text-gray-400 font-bold uppercase text-[10px] tracking-[0.3em] mt-2">ESPACE {currentUser.role.toUpperCase()} AKWABA</p>
         </div>
         {!forceEditId && (
           <div className="flex bg-white p-1 rounded-2xl shadow-sm border border-gray-100">
