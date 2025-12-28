@@ -61,6 +61,12 @@ const AdminPanel: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
+  const handleDeleteCode = (code: string) => {
+    if (window.confirm("Voulez-vous vraiment supprimer ce code d'accès ?")) {
+        storage.deleteAccessCode(code);
+    }
+  };
+
   const cleanDemoData = async () => {
     if (!window.confirm("ATTENTION : Cette action va supprimer définitivement tous les utilisateurs de démonstration (u1-u4) et les cours associés de la base de données Supabase. Êtes-vous sûr ?")) return;
 
@@ -264,12 +270,18 @@ const AdminPanel: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                     </div>
                 )}
 
-                <h3 className="text-2xl font-black text-gray-900 mb-6 mt-12 opacity-50">Historique (Codes Utilisés)</h3>
-                <div className="opacity-50 pointer-events-none">
-                     {accessCodes.filter(c => c.isUsed).slice(0, 5).map(code => (
-                        <div key={code.code} className="flex items-center justify-between p-4 border-b border-gray-100">
-                            <span className="font-mono font-bold text-gray-500 line-through">{code.code}</span>
-                            <span className="text-xs font-bold uppercase">{code.role}</span>
+                <h3 className="text-2xl font-black text-gray-900 mb-6 mt-12">Historique (Codes Utilisés)</h3>
+                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+                     {accessCodes.filter(c => c.isUsed).length === 0 && <p className="text-gray-400 font-bold text-sm">Aucun code utilisé.</p>}
+                     {accessCodes.filter(c => c.isUsed).map(code => (
+                        <div key={code.code} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 group hover:border-ivoryOrange transition-colors">
+                            <div className="flex items-center gap-4">
+                                <span className="font-mono font-bold text-gray-500 line-through decoration-2 decoration-red-300">{code.code}</span>
+                                <span className="px-3 py-1 bg-white rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-400">{code.role}</span>
+                            </div>
+                            <button onClick={() => handleDeleteCode(code.code)} className="p-2 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all" title="Supprimer définitivement">
+                                <Trash2 size={16} />
+                            </button>
                         </div>
                      ))}
                 </div>

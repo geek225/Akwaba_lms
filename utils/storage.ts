@@ -332,11 +332,28 @@ export const storage = {
 
       // 2. Update Supabase
       if (supabase) {
-          await supabase.from('access_codes').update({ is_used: true }).eq('code', code);
+        const { error } = await supabase
+            .from('access_codes')
+            .update({ is_used: true })
+            .eq('code', code);
+        if (error) console.error("Erreur update code used:", error);
       }
   },
 
-  // --- INITIALIZATION & SYNC ---
+  deleteAccessCode: async (code: string) => {
+    // 1. Delete Local
+    const codes = storage.getAccessCodes();
+    const updated = codes.filter(c => c.code !== code);
+    storage.saveAccessCodes(updated);
+
+    // 2. Delete Supabase
+    if (supabase) {
+        const { error } = await supabase.from('access_codes').delete().eq('code', code);
+        if (error) console.error("Error deleting access code:", error);
+    }
+  },
+
+  // --- SYNC ---
   init: async () => {
     // 1. Load defaults if empty
     if (!localStorage.getItem(COURSES_KEY)) storage.saveCourses([]);
