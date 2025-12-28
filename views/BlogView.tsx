@@ -42,7 +42,14 @@ const BlogView: React.FC<BlogViewProps> = ({ currentUser, onEdit }) => {
             {posts.map(post => (
                 <article key={post.id} className="bg-white rounded-[40px] overflow-hidden shadow-xl border border-gray-100 group hover:-translate-y-2 transition-transform duration-300">
                     <div className="h-64 overflow-hidden relative">
-                        <img src={post.coverImage} alt={post.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        <img 
+                            src={post.coverImage} 
+                            alt={post.title} 
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                            onError={(e) => {
+                                e.currentTarget.src = 'https://placehold.co/800x600/FF8800/FFFFFF?text=Akwaba+Blog';
+                            }}
+                        />
                         {!post.isPublished && (
                             <div className="absolute top-4 right-4 bg-red-500 text-white text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest">Brouillon</div>
                         )}

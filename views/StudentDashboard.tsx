@@ -97,8 +97,14 @@ const StudentDashboard: React.FC<{ initialCourse: Course | null, currentUser: Us
             courses.map(course => (
             <div key={course.id} onClick={() => handleSelectCourse(course)} className="bg-white rounded-[48px] overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all group cursor-pointer">
               <div className="relative h-56">
-                <img src={course.thumbnail} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute top-6 left-6 bg-white/90 backdrop-blur px-4 py-2 rounded-2xl text-[10px] font-black text-ivoryGreen uppercase tracking-widest">{course.category}</div>
+                <img 
+                  src={course.thumbnail} 
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://placehold.co/800x600/FF8800/FFFFFF?text=Akwaba+LMS';
+                  }}
+                />
+                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-4 py-2 rounded-2xl text-[10px] font-black text-ivoryGreen uppercase">{course.category}</div>
               </div>
               <div className="p-10">
                 <h3 className="text-2xl font-black text-gray-900 mb-6 leading-tight line-clamp-2 min-h-[4rem] group-hover:text-ivoryOrange transition-colors">{course.title}</h3>

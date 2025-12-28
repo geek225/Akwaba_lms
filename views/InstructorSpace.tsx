@@ -125,7 +125,13 @@ const InstructorSpace: React.FC<{ currentUser: User, forceEditId?: string | null
           {courses.map(c => (
             <div key={c.id} className="bg-white rounded-[48px] overflow-hidden border border-gray-100 shadow-sm group hover:shadow-2xl transition-all">
               <div className="h-48 relative">
-                <img src={c.thumbnail} className="w-full h-full object-cover" />
+                <img 
+                  src={c.thumbnail} 
+                  className="w-full h-full object-cover" 
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://placehold.co/800x600/FF8800/FFFFFF?text=Akwaba+LMS';
+                  }}
+                />
                 <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-4 py-2 rounded-2xl text-[10px] font-black text-ivoryGreen uppercase">{c.category}</div>
                 {c.isDraft && <div className="absolute top-4 right-4 bg-yellow-400 text-white text-[10px] font-black px-4 py-2 rounded-2xl">BROUILLON</div>}
               </div>
