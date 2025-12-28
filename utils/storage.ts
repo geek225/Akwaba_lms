@@ -165,9 +165,22 @@ export const storage = {
     try {
       localStorage.setItem(MESSAGES_KEY, JSON.stringify(msgs));
       window.dispatchEvent(new Event('storage_update'));
-      // Note: Realtime messages are handled separately in ChatWindow usually, 
-      // but if we want to persist history here:
-      // In a real app, messages are append-only to DB.
+      if (supabase) {
+        msgs.forEach(async (m) => {
+          try {
+            const { error } = await supabase.from('messages').upsert({
+              id: m.id,
+              sender_id: m.senderId,
+              receiver_id: m.receiverId,
+              content: m.content,
+              created_at: m.createdAt
+            });
+            if (error) console.error("Erreur sync message:", error);
+          } catch (e) {
+            console.error("Exception sync message:", e);
+          }
+        });
+      }
     } catch (e) {
       console.error("Erreur sauvegarde messages:", e);
     }

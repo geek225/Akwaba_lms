@@ -23,10 +23,8 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     const allUsers = storage.getUsers().filter(u => u.id !== currentUser.id && u.role !== undefined);
     setContacts(allUsers);
     
-    // Only load messages from storage if Supabase is NOT active or initial load
-    if (!supabase) {
-         setMessages(storage.getMessages());
-    }
+    // Always load messages from storage initially (offline support)
+    setMessages(storage.getMessages());
   };
 
   useEffect(() => {

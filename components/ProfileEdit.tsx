@@ -119,12 +119,33 @@ const ProfileEdit: React.FC<{ userId: string; initialUser?: User }> = ({ userId,
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Lien Photo de Profil (URL)</label>
-              <input 
-                value={formData.avatar || ''} 
-                onChange={e => setFormData({...formData, avatar: e.target.value})} 
-                className="w-full p-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-ivoryOrange focus:bg-white text-gray-900 font-bold outline-none transition-all" 
-                placeholder="https://..."
-              />
+              <div className="flex gap-2">
+                  <input 
+                    value={formData.avatar || ''} 
+                    onChange={e => setFormData({...formData, avatar: e.target.value})} 
+                    className="w-full p-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-ivoryOrange focus:bg-white text-gray-900 font-bold outline-none transition-all" 
+                    placeholder="https://..."
+                  />
+                  <label className="p-4 bg-gray-100 hover:bg-gray-200 rounded-2xl cursor-pointer transition-colors flex items-center justify-center">
+                      <ImageIcon className="text-gray-500" />
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                    setFormData({...formData, avatar: reader.result as string});
+                                };
+                                reader.readAsDataURL(file);
+                            }
+                        }}
+                      />
+                  </label>
+              </div>
+              <p className="text-xs text-gray-400 pl-2">Collez une URL ou cliquez sur l'icône pour uploader une image locale.</p>
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Bio / Slogan</label>
