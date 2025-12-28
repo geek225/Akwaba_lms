@@ -39,12 +39,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
         alert("Si cet email existe, un lien de réinitialisation vous a été envoyé.");
         setIsResetting(false);
     } catch (err: any) {
-        // Fallback for local testing
-        if (email.includes('@akwaba.ci')) {
-             alert("Mode démo : Contactez l'administrateur pour réinitialiser ce compte de test.");
-        } else {
-             setError("Impossible d'envoyer l'email. Vérifiez votre connexion.");
-        }
+        setError(err.message || "Une erreur est survenue.");
     } finally {
         setLoading(false);
     }

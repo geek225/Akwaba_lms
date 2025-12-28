@@ -66,7 +66,7 @@ const AdminPanel: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     const all = storage.getUsers();
     let updated;
     if (editingUser) {
-      updated = all.map(u => u.id === editingUser.id ? { ...u, ...userFormData } : u);
+      updated = all.map(u => u.id === editingUser.id ? { ...u, ...userFormData, avatar: `https://i.pravatar.cc/150?u=${userFormData.email}` } : u);
     } else {
       const newUser: User = {
         id: `u-${Date.now()}`,

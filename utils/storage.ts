@@ -59,10 +59,10 @@ export const storage = {
   getCourses: (): Course[] => {
     try {
       const stored = localStorage.getItem(COURSES_KEY);
-      return stored ? JSON.parse(stored) : MOCK_COURSES;
+      return stored ? JSON.parse(stored) : [];
     } catch (e) {
       console.error("Erreur lecture courses:", e);
-      return MOCK_COURSES;
+      return [];
     }
   },
   saveCourses: async (courses: Course[]) => {
