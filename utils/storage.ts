@@ -21,18 +21,22 @@ export const storage = {
   getUsers: (): User[] => {
     try {
       const stored = localStorage.getItem(USERS_KEY);
-      return stored ? JSON.parse(stored) : [];
+      const users: User[] = stored ? JSON.parse(stored) : [];
+      // HARD FILTER: Never return demo users even if they exist in storage
+      return users.filter(u => !['u1', 'u2', 'u3', 'u4'].includes(u.id));
     } catch (e) {
       console.error("Erreur lecture users:", e);
       return [];
     }
   },
   saveUsers: (users: User[]) => {
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    // Ensure we NEVER save demo users back to storage
+    const cleanUsers = users.filter(u => !['u1', 'u2', 'u3', 'u4'].includes(u.id));
+    localStorage.setItem(USERS_KEY, JSON.stringify(cleanUsers));
     window.dispatchEvent(new Event('storage_update'));
     
     if (supabase) {
-      users.forEach(async (u) => {
+      cleanUsers.forEach(async (u) => {
         try {
           const { error } = await supabase.from('users').upsert({
             id: u.id,
