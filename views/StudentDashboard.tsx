@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Course, QuizQuestion, User } from '../types';
 import { storage } from '../utils/storage';
-import { ChevronLeft, BrainCircuit, Volume2, CheckCircle2, XCircle, RefreshCcw, Award, PlayCircle, BookOpen, Clock, Search, MessageSquare, User as UserIcon } from 'lucide-react';
+import { ChevronLeft, BrainCircuit, Volume2, CheckCircle2, XCircle, RefreshCcw, Award, PlayCircle, BookOpen, Clock, Search, MessageSquare, User as UserIcon, FileText, Download } from 'lucide-react';
 import ProfileEdit from '../components/ProfileEdit';
 import ChatWindow from '../components/ChatWindow';
 
@@ -160,7 +160,19 @@ const StudentDashboard: React.FC<{ initialCourse: Course | null, currentUser: Us
                     module.videoType === 'url' ? (
                        <iframe className="w-full h-full" src={getEmbedUrl(module.videoUrl)} frameBorder="0" allowFullScreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
                     ) : (
-                       <video controls className="w-full h-full object-contain" src={module.videoUrl}></video>
+                       // Check if it's a video file or a document
+                       (module.videoUrl.startsWith('data:video') || module.videoUrl.endsWith('.mp4')) ? (
+                           <video controls className="w-full h-full object-contain" src={module.videoUrl}></video>
+                       ) : (
+                           <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-center p-10">
+                              <FileText size={64} className="text-gray-300 mb-4"/>
+                              <h3 className="text-xl font-black text-gray-900 mb-2">Ressource Documentaire</h3>
+                              <p className="text-gray-500 mb-6 font-medium max-w-md">Ce module contient un fichier (PDF, Excel, Word) à consulter pour votre apprentissage.</p>
+                              <a href={module.videoUrl} download={`Akwaba-Module-${activeIdx+1}-Ressource`} className="px-8 py-4 bg-ivoryGreen text-white rounded-2xl font-black text-sm shadow-xl hover:scale-105 transition-all flex items-center gap-2">
+                                 <Download size={20}/> TÉLÉCHARGER LE FICHIER
+                              </a>
+                           </div>
+                       )
                     )
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-500 font-black uppercase text-xs tracking-widest">Vidéo indisponible</div>

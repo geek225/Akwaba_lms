@@ -21,7 +21,26 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     // However, contacts come from storage.
     // Filter out mock users if any remaining (safety)
     const allUsers = storage.getUsers().filter(u => u.id !== currentUser.id && u.role !== undefined && !['u1', 'u2', 'u3', 'u4'].includes(u.id));
-    setContacts(allUsers);
+    
+    // FILTER CONTACTS BASED ON ROLE (PRIVATE CHAT CONTEXT)
+    const enrollments = storage.getEnrollments();
+    const courses = storage.getCourses();
+    let filteredUsers = allUsers;
+
+    if (currentUser.role === UserRole.STUDENT) {
+        // Students see only their instructors and admins
+        const myCourseIds = enrollments.filter(e => e.userId === currentUser.id).map(e => e.courseId);
+        const myInstructorsIds = courses.filter(c => myCourseIds.includes(c.id)).map(c => c.instructorId);
+        filteredUsers = allUsers.filter(u => myInstructorsIds.includes(u.id) || u.role === UserRole.ADMIN);
+    } else if (currentUser.role === UserRole.INSTRUCTOR) {
+        // Instructors see only their students and admins
+        const myCourseIds = courses.filter(c => c.instructorId === currentUser.id).map(c => c.id);
+        const myStudentIds = enrollments.filter(e => myCourseIds.includes(e.courseId)).map(e => e.userId);
+        filteredUsers = allUsers.filter(u => myStudentIds.includes(u.id) || u.role === UserRole.ADMIN);
+    }
+    // Admins see everyone (default)
+
+    setContacts(filteredUsers);
     
     // Always load messages from storage initially (offline support)
     setMessages(storage.getMessages());
@@ -318,10 +337,10 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (f) {
-      // Limite réduite à 2MB pour éviter de saturer le LocalStorage (Quota ~5MB) ou la colonne texte Supabase
-      if (f.size > 2 * 1024 * 1024) {
-          alert("Le fichier est trop volumineux (Max 2 Mo). Veuillez choisir un fichier plus léger.");
-          e.target.value = ''; // Réinitialise le champ pour permettre une nouvelle sélection
+      // Limite augmentée à 4MB pour les documents de cours/exercices
+      if (f.size > 4 * 1024 * 1024) {
+          alert("Le fichier est trop volumineux (Max 4 Mo).");
+          e.target.value = ''; 
           return;
       }
       const reader = new FileReader();

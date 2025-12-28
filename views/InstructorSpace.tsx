@@ -96,6 +96,25 @@ const InstructorSpace: React.FC<{ currentUser: User, forceEditId?: string | null
     setShowModuleModal(false);
   };
 
+  const handleModuleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const f = e.target.files?.[0];
+      if (f) {
+        if (f.size > 5 * 1024 * 1024) {
+            alert("Fichier trop volumineux (Max 5Mo)");
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            setModForm({
+                ...modForm, 
+                videoUrl: ev.target?.result as string, // Store base64
+                videoType: 'file' // Use 'file' to indicate it's a file resource
+            });
+        };
+        reader.readAsDataURL(f);
+      }
+  };
+
   // Logic Quiz
   const addQuizQuestion = () => {
     const newQ: QuizQuestion = { id: `q-${Date.now()}`, text: '', options: ['', ''], correctIndex: 0 };
@@ -263,7 +282,37 @@ const InstructorSpace: React.FC<{ currentUser: User, forceEditId?: string | null
                 <div className="grid md:grid-cols-2 gap-6 md:gap-10">
                    <div className="space-y-6">
                       <input value={modForm.title} onChange={e => setModForm({...modForm, title: e.target.value})} placeholder="Titre module" className="w-full p-4 md:p-6 rounded-3xl bg-gray-50 border-2 border-transparent focus:border-ivoryOrange focus:bg-white outline-none font-bold text-gray-900" />
-                      <input value={modForm.videoUrl} onChange={e => setModForm({...modForm, videoUrl: e.target.value})} placeholder="Lien Vidéo (YouTube/MP4)" className="w-full p-4 md:p-6 rounded-3xl bg-gray-50 border-2 border-transparent focus:border-ivoryOrange focus:bg-white outline-none font-bold text-gray-900" />
+                      
+                      <div className="space-y-3">
+                          <div className="flex gap-2">
+                              <button 
+                                  onClick={() => setModForm({...modForm, videoType: 'url', videoUrl: ''})}
+                                  className={`flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-widest ${modForm.videoType === 'url' ? 'bg-ivoryOrange text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
+                              >
+                                  Lien Vidéo
+                              </button>
+                              <button 
+                                  onClick={() => setModForm({...modForm, videoType: 'file', videoUrl: ''})}
+                                  className={`flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-widest ${modForm.videoType === 'file' ? 'bg-ivoryOrange text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
+                              >
+                                  Document / Fichier
+                              </button>
+                          </div>
+
+                          {modForm.videoType === 'url' ? (
+                              <input value={modForm.videoUrl} onChange={e => setModForm({...modForm, videoUrl: e.target.value})} placeholder="Lien Vidéo (YouTube/MP4)" className="w-full p-4 md:p-6 rounded-3xl bg-gray-50 border-2 border-transparent focus:border-ivoryOrange focus:bg-white outline-none font-bold text-gray-900" />
+                          ) : (
+                              <div className="border-2 border-dashed border-gray-200 rounded-3xl p-6 text-center hover:border-ivoryOrange transition-colors bg-gray-50">
+                                  <input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt" onChange={handleModuleFileChange} className="hidden" id="module-file-input" />
+                                  <label htmlFor="module-file-input" className="cursor-pointer flex flex-col items-center gap-2">
+                                      <Paperclip size={24} className="text-gray-400"/>
+                                      <span className="font-bold text-gray-500 text-sm">{modForm.videoUrl ? 'Fichier chargé (Cliquez pour changer)' : 'Cliquez pour uploader un document'}</span>
+                                      <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">PDF, Word, Excel (Max 5Mo)</span>
+                                  </label>
+                                  {modForm.videoUrl && <div className="mt-3 flex items-center justify-center gap-2 text-green-500 font-bold text-xs"><CheckCircle2 size={12}/> Fichier prêt</div>}
+                              </div>
+                          )}
+                      </div>
                    </div>
                    <textarea value={modForm.description} onChange={e => setModForm({...modForm, description: e.target.value})} rows={5} placeholder="Résumé du module..." className="w-full p-4 md:p-6 rounded-3xl bg-gray-50 border-2 border-transparent focus:border-ivoryOrange focus:bg-white outline-none font-bold text-gray-900"></textarea>
                 </div>
