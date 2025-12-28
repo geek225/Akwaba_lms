@@ -30,17 +30,21 @@ const InstructorSpace: React.FC<{ currentUser: User, forceEditId?: string | null
   const [modForm, setModForm] = useState<Module>({ id: '', title: '', videoUrl: '', videoType: 'url', description: '', quiz: [] });
 
   const loadCourses = () => {
-    const all = storage.getCourses();
-    setCourses(all.filter(c => c.instructorId === currentUser.id || currentUser.role === UserRole.ADMIN));
-    if (forceEditId) {
-      const c = all.find(x => x.id === forceEditId);
-      if (c) { 
-        setTitle(c.title); setCategory(c.category); setDesc(c.description); setModules(c.modules); setThumbnail(c.thumbnail);
-      }
-    }
-    // Try to update user from storage if available, otherwise keep prop
-    const foundUser = storage.getUsers().find(u => u.id === currentUser.id);
-    if (foundUser) setUser(foundUser);
+    // Wrap in setTimeout to avoid "Cannot update during render" React error
+    // when triggered by other components' render phase (like ChatWindow)
+    setTimeout(() => {
+        const all = storage.getCourses();
+        setCourses(all.filter(c => c.instructorId === currentUser.id || currentUser.role === UserRole.ADMIN));
+        if (forceEditId) {
+          const c = all.find(x => x.id === forceEditId);
+          if (c) { 
+            setTitle(c.title); setCategory(c.category); setDesc(c.description); setModules(c.modules); setThumbnail(c.thumbnail);
+          }
+        }
+        // Try to update user from storage if available, otherwise keep prop
+        const foundUser = storage.getUsers().find(u => u.id === currentUser.id);
+        if (foundUser) setUser(foundUser);
+    }, 0);
   };
 
   useEffect(() => {

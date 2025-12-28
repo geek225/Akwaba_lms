@@ -135,6 +135,9 @@ export const storage = {
         // Petite pause pour laisser le temps à saveUsers de finir (simple hack, idéalement async/await complet)
         setTimeout(() => {
             enrolls.forEach(async (e) => {
+                // Skip deleted/mock courses to avoid FK constraint errors
+                if (['c1', 'c2', 'c3', 'c4', 'c5'].includes(e.courseId)) return;
+
                 try {
                     const { error } = await supabase.from('enrollments').upsert({
                         user_id: e.userId,
@@ -142,7 +145,10 @@ export const storage = {
                         enrolled_at: e.enrolledAt,
                         progress: e.progress
                     });
-                    if (error) console.error("Erreur sync enrollment:", error);
+                    if (error) {
+                         // Ignore FK error if course was deleted remotely but still in local storage enrollments
+                         if (error.code !== '23503') console.error("Erreur sync enrollment:", error);
+                    }
                 } catch (err) {
                     console.error("Exception sync enrollment:", err);
                 }
@@ -167,6 +173,9 @@ export const storage = {
       window.dispatchEvent(new Event('storage_update'));
       if (supabase) {
         msgs.forEach(async (m) => {
+          // Skip syncing temporary messages (optimistic UI) or invalid UUIDs
+          if (m.id.startsWith('m-')) return;
+          
           try {
             const { error } = await supabase.from('messages').upsert({
               id: m.id,
