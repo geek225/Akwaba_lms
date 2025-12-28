@@ -128,7 +128,14 @@ const Home: React.FC<HomeProps> = ({ onSelectCourse, currentUser, onNavigateToAu
               onClick={() => onSelectCourse(course)}
             >
               <div className="relative h-56">
-                <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <img 
+                  src={course.thumbnail} 
+                  alt={course.title} 
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://placehold.co/800x600/FF8800/FFFFFF?text=Akwaba+LMS';
+                  }}
+                />
                 <div className="absolute top-6 left-6 bg-white/90 backdrop-blur px-4 py-2 rounded-2xl text-[10px] font-black text-ivoryGreen uppercase tracking-widest">
                   {course.category}
                 </div>

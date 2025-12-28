@@ -45,7 +45,13 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser, onLogout, onGoHome, onGoDa
                 <p className="text-sm font-black text-gray-900 leading-none">{currentUser.firstName} {currentUser.name}</p>
                 <span className="text-[10px] font-bold uppercase text-ivoryGreen tracking-widest">{currentUser.role}</span>
               </div>
-              <img src={currentUser.avatar} className="w-10 h-10 rounded-full border-2 border-ivoryOrange" />
+              <img 
+                src={currentUser.avatar} 
+                className="w-10 h-10 rounded-full border-2 border-ivoryOrange object-cover" 
+                onError={(e) => {
+                  e.currentTarget.src = `https://ui-avatars.com/api/?name=${currentUser.firstName}+${currentUser.name}&background=FF8800&color=fff`;
+                }}
+              />
               <button onClick={onLogout} className="p-2 text-gray-400 hover:text-red-500 transition-colors">
                 <LogOut size={20} />
               </button>
@@ -63,7 +69,13 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser, onLogout, onGoHome, onGoDa
         {/* Mobile Menu Toggle */}
         <div className="md:hidden flex items-center gap-4">
             {currentUser && (
-                <img src={currentUser.avatar} className="w-8 h-8 rounded-full border border-ivoryOrange" />
+                <img 
+                    src={currentUser.avatar} 
+                    className="w-8 h-8 rounded-full border border-ivoryOrange object-cover" 
+                    onError={(e) => {
+                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${currentUser.firstName}+${currentUser.name}&background=FF8800&color=fff`;
+                    }}
+                />
             )}
             <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-gray-600">
                 {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
