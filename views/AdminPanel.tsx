@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { storage } from '../utils/storage';
+import { storage, supabase } from '../utils/storage';
 import { User, UserRole, Course, Enrollment, ChatMessage, AccessCode } from '../types';
-import { Search, UserPlus, X, Edit2, Trash2, Save, Filter, BookOpen, MessageSquare, Send, Paperclip, AlertTriangle, Key, Copy, Check } from 'lucide-react';
+import { Search, UserPlus, X, Edit2, Trash2, Save, Filter, BookOpen, MessageSquare, Send, Paperclip, AlertTriangle, Key, Copy, Check, Database } from 'lucide-react';
 import InstructorSpace from './InstructorSpace'; // Récupération pour l'édition globale
 import ProfileEdit from '../components/ProfileEdit';
 import ChatWindow from '../components/ChatWindow';
@@ -59,6 +59,50 @@ const AdminPanel: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     navigator.clipboard.writeText(code);
     setCopiedCode(code);
     setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  const cleanDemoData = async () => {
+    if (!window.confirm("ATTENTION : Cette action va supprimer définitivement tous les utilisateurs de démonstration (u1-u4) et les cours associés de la base de données Supabase. Êtes-vous sûr ?")) return;
+
+    const demoUserIds = ['u1', 'u2', 'u3', 'u4'];
+    const demoCourseIds = ['c1', 'c2', 'c3', 'c4', 'c5'];
+
+    if (supabase) {
+        try {
+            // 1. Delete Messages
+            await supabase.from('messages').delete().in('from_id', demoUserIds);
+            await supabase.from('messages').delete().in('to_id', demoUserIds);
+            
+            // 2. Delete Enrollments
+            await supabase.from('enrollments').delete().in('user_id', demoUserIds);
+            
+            // 3. Delete Modules (Cascade should handle, but to be safe)
+            // Need course IDs for this, but let's assume cascade on courses works or skip specific module deletion if no ID
+            
+            // 4. Delete Courses
+            await supabase.from('courses').delete().in('instructor_id', demoUserIds);
+            await supabase.from('courses').delete().in('id', demoCourseIds);
+
+            // 5. Delete Users
+            const { error } = await supabase.from('users').delete().in('id', demoUserIds);
+            
+            if (error) {
+                console.error("Erreur lors de la suppression:", error);
+                alert("Erreur lors de la suppression: " + error.message);
+            } else {
+                alert("Données de démonstration supprimées avec succès de Supabase !");
+                // Refresh local storage too just in case
+                const cleanUsers = storage.getUsers().filter(u => !demoUserIds.includes(u.id));
+                storage.saveUsers(cleanUsers);
+                const cleanCourses = storage.getCourses().filter(c => !demoCourseIds.includes(c.id));
+                storage.saveCourses(cleanCourses);
+            }
+        } catch (e: any) {
+            alert("Erreur inattendue: " + e.message);
+        }
+    } else {
+        alert("Supabase n'est pas connecté.");
+    }
   };
 
   const handleSaveUser = (e: React.FormEvent) => {
@@ -273,6 +317,7 @@ const AdminPanel: React.FC<{ currentUser: User }> = ({ currentUser }) => {
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher par nom ou email..." className="w-full pl-16 pr-8 py-4 md:py-6 rounded-[32px] border-4 border-white bg-white focus:border-ivoryOrange outline-none font-black text-gray-900 shadow-xl transition-all" />
             </div>
             <button onClick={() => { setEditingUser(null); setUserFormData({role: activeTab === 'staff' ? UserRole.INSTRUCTOR : UserRole.STUDENT}); setShowUserModal(true); }} className="px-8 py-4 md:px-12 md:py-6 bg-ivoryGreen text-white rounded-[32px] font-black text-lg flex items-center justify-center gap-4 hover:scale-105 transition-all shadow-2xl"><UserPlus size={24} /> AJOUTER</button>
+            <button onClick={cleanDemoData} className="px-8 py-4 md:px-12 md:py-6 bg-red-500 text-white rounded-[32px] font-black text-lg flex items-center justify-center gap-4 hover:scale-105 transition-all shadow-2xl"><Database size={24} /> NETTOYER DÉMO</button>
           </div>
 
           <div className="overflow-x-auto">
