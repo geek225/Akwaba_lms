@@ -117,11 +117,17 @@ const BlogEditor: React.FC<BlogEditorProps> = ({ currentUser, onClose }) => {
     const handleSave = () => {
         if (!editingPost?.title) return alert("Le titre est requis.");
 
+        // Fallback for content if state is stale
+        const currentContent = contentEditableRef.current?.innerHTML || editingPost.content || '';
+
+        // Safe ID generation
+        const postId = editingPost.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString());
+
         const newPost: BlogPost = {
-            id: editingPost.id || crypto.randomUUID(),
+            id: postId,
             title: editingPost.title,
             excerpt: editingPost.excerpt || contentEditableRef.current?.innerText.substring(0, 150) + '...' || '',
-            content: editingPost.content || '',
+            content: currentContent,
             authorId: editingPost.authorId || currentUser.id,
             authorName: editingPost.authorName || currentUser.name,
             coverImage: editingPost.coverImage || 'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&auto=format&fit=crop&q=60',
@@ -129,14 +135,20 @@ const BlogEditor: React.FC<BlogEditorProps> = ({ currentUser, onClose }) => {
             isPublished: editingPost.isPublished ?? true
         };
 
-        const updatedPosts = editingPost.id 
-            ? posts.map(p => p.id === editingPost.id ? newPost : p)
-            : [newPost, ...posts];
-        
-        storage.savePosts(updatedPosts);
-        setPosts(updatedPosts);
-        localStorage.removeItem('blog_draft'); // Clear draft after save
-        setEditingPost(null); // Return to list
+        try {
+            const updatedPosts = editingPost.id 
+                ? posts.map(p => p.id === editingPost.id ? newPost : p)
+                : [newPost, ...posts];
+            
+            storage.savePosts(updatedPosts);
+            setPosts(updatedPosts);
+            localStorage.removeItem('blog_draft'); // Clear draft after save
+            setEditingPost(null); // Return to list
+            alert("Article publié avec succès !");
+        } catch (error) {
+            console.error("Erreur lors de la sauvegarde :", error);
+            alert("Une erreur est survenue lors de la sauvegarde.");
+        }
     };
 
     const handleDelete = (id: string) => {
