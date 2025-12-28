@@ -30,6 +30,8 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
   
   const scannerRef = React.useRef<Html5Qrcode | null>(null);
 
+  const [scanStatus, setScanStatus] = useState<string>('Initialisation de la caméra...');
+
   // QR Code Scanner Effect
   useEffect(() => {
     // Cleanup function to handle scanner removal
@@ -48,6 +50,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
     };
 
     if (loginMethod === 'qr' && isLogin) {
+        setScanStatus("Démarrage de la caméra...");
         // Small delay to ensure DOM is ready
         const timeout = setTimeout(() => {
             // Ensure no existing scanner
@@ -56,8 +59,11 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
                 scannerRef.current = html5QrCode;
 
                 const config = { 
-                    fps: 15, 
-                    aspectRatio: 1.0
+                    fps: 10, 
+                    aspectRatio: 1.0,
+                    experimentalFeatures: {
+                        useBarCodeDetectorIfSupported: true
+                    }
                 };
                 
                 // Start scanning directly with rear camera
@@ -66,6 +72,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
                     config,
                     (decodedText) => {
                         console.log("QR Code scanned:", decodedText);
+                        setScanStatus("QR détecté ! Vérification...");
                         try {
                             const data = JSON.parse(decodedText);
                             if (data.type === 'akwaba_login' && data.studentId) {
@@ -75,18 +82,23 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
                                 cleanupScanner();
                             } else {
                                 console.warn("Invalid QR code format:", data);
+                                setScanStatus("QR Code non reconnu. Est-ce un code Akwaba ?");
                                 setError("QR Code non reconnu. Est-ce un code Akwaba ?");
                             }
                         } catch (e) {
                             console.error("QR Invalid JSON", e);
+                            setScanStatus(`QR lu mais format invalide: ${decodedText.substring(0, 15)}...`);
                             // Don't show error to user for every frame, just log
                         }
                     },
                     (errorMessage) => {
                         // ignore
                     }
-                ).catch((err) => {
+                ).then(() => {
+                    setScanStatus("Caméra active. Placez le QR code.");
+                }).catch((err) => {
                     console.error("Error starting scanner", err);
+                    setScanStatus("Erreur caméra : " + err);
                     setError("Impossible d'accéder à la caméra. Vérifiez les permissions.");
                 });
             });
@@ -341,8 +353,11 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
             {/* QR LOGIN UI */}
             {isLogin && loginMethod === 'qr' && (
                 <div className="flex flex-col items-center justify-center py-8">
-                    <div id="reader" className="w-full max-w-[300px] overflow-hidden rounded-2xl border-4 border-ivoryGreen/20"></div>
+                    <div id="reader" className="w-full max-w-[300px] overflow-hidden rounded-2xl border-4 border-ivoryGreen/20 bg-black"></div>
                     <p className="text-center text-sm text-gray-500 mt-4 font-medium">Placez votre QR Code devant la caméra</p>
+                    <p className="text-center text-xs text-orange-600 mt-2 font-mono bg-orange-50 px-3 py-1 rounded-lg animate-pulse">
+                        {scanStatus}
+                    </p>
                 </div>
             )}
 

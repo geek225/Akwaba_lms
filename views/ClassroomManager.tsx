@@ -352,11 +352,10 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ currentUser, onClos
                                 id="qr-code-canvas"
                                 value={JSON.stringify({ 
                                     type: 'akwaba_login', 
-                                    studentId: selectedStudentQR.studentId, 
-                                    secret: selectedStudentQR.id // In production, use a secure token!
+                                    studentId: selectedStudentQR.studentId
                                 })} 
-                                size={200}
-                                level={"H"}
+                                size={250}
+                                level={"M"}
                                 includeMargin={true}
                             />
                         </div>
