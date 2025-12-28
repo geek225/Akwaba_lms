@@ -4,7 +4,7 @@ import { User, UserRole } from '../types';
 import { storage } from '../utils/storage';
 import { supabase } from '../utils/supabaseClient';
 import { Mail, Lock, Eye, EyeOff, User as UserIcon, Phone, MapPin, Globe, QrCode, CreditCard, Scan } from 'lucide-react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 
 interface AuthViewProps {
   onLogin: (user: User) => void;
@@ -28,7 +28,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
   const [city, setCity] = useState('');
   const [accessCode, setAccessCode] = useState('');
   
-  const scannerRef = React.useRef<Html5QrcodeScanner | null>(null);
+  const scannerRef = React.useRef<Html5Qrcode | null>(null);
 
   // QR Code Scanner Effect
   useEffect(() => {
@@ -36,6 +36,9 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
     const cleanupScanner = async () => {
         if (scannerRef.current) {
             try {
+                if (scannerRef.current.isScanning) {
+                    await scannerRef.current.stop();
+                }
                 await scannerRef.current.clear();
             } catch (e) {
                 console.error("Failed to clear scanner", e);
@@ -49,31 +52,33 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
         const timeout = setTimeout(() => {
             // Ensure no existing scanner
             cleanupScanner().then(() => {
-                const scanner = new Html5QrcodeScanner(
-                    "reader",
-                    { 
-                        fps: 10, 
-                        qrbox: { width: 250, height: 250 },
-                        aspectRatio: 1.0
-                    },
-                    /* verbose= */ false
-                );
+                const html5QrCode = new Html5Qrcode("reader");
+                scannerRef.current = html5QrCode;
+
+                const config = { fps: 10, qrbox: { width: 250, height: 250 } };
                 
-                scannerRef.current = scanner;
-                
-                scanner.render((decodedText) => {
-                    try {
-                        const data = JSON.parse(decodedText);
-                        if (data.type === 'akwaba_login' && data.studentId) {
-                            handleIdLogin(data.studentId);
-                            // Stop scanning on success
-                            cleanupScanner();
+                // Start scanning directly with rear camera
+                html5QrCode.start(
+                    { facingMode: "environment" }, 
+                    config,
+                    (decodedText) => {
+                        try {
+                            const data = JSON.parse(decodedText);
+                            if (data.type === 'akwaba_login' && data.studentId) {
+                                handleIdLogin(data.studentId);
+                                // Stop scanning on success
+                                cleanupScanner();
+                            }
+                        } catch (e) {
+                            console.error("QR Invalid", e);
                         }
-                    } catch (e) {
-                        console.error("QR Invalid", e);
+                    },
+                    (errorMessage) => {
+                        // ignore
                     }
-                }, (error) => {
-                    // Ignore scan errors usually
+                ).catch((err) => {
+                    console.error("Error starting scanner", err);
+                    setError("Impossible d'accéder à la caméra. Vérifiez les permissions.");
                 });
             });
         }, 100);
