@@ -93,12 +93,48 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                        createdAt: r.created_at,
                        read: r.read
                     }));
+                    
                     setMessages(prev => {
-                        const existingIds = new Set(prev.map(m => m.id));
-                        const newMessages = mapped.filter(m => !existingIds.has(m.id));
-                        if (newMessages.length === 0) return prev;
+                        // 1. Identify valid messages from server
+                        const serverIds = new Set(mapped.map(m => m.id));
                         
-                        const updated = [...prev, ...newMessages].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+                        // 2. Keep existing messages that are NOT in the server fetch (likely optimistic ones)
+                        // BUT we must check if any optimistic message corresponds to a new server message
+                        let currentMessages = [...prev];
+                        
+                        // Update existing messages with server data (e.g. read status)
+                        currentMessages = currentMessages.map(existing => {
+                            const serverVersion = mapped.find(m => m.id === existing.id);
+                            if (serverVersion) {
+                                return serverVersion;
+                            }
+                            return existing;
+                        });
+
+                        // 3. Add new server messages, handling optimistic deduplication
+                        const newServerMessages = mapped.filter(m => !currentMessages.find(c => c.id === m.id));
+                        
+                        newServerMessages.forEach(serverMsg => {
+                             // Check for optimistic duplicate
+                             if (serverMsg.fromId === currentUser.id) {
+                                const optimisticIdx = currentMessages.findIndex(m => 
+                                    m.fromId === currentUser.id && 
+                                    m.text === serverMsg.text && 
+                                    m.id.startsWith('m-') &&
+                                    (new Date(serverMsg.createdAt).getTime() - new Date(m.createdAt).getTime() < 20000) // Increased tolerance to 20s
+                                );
+                                
+                                if (optimisticIdx !== -1) {
+                                    // Replace optimistic with server message
+                                    currentMessages[optimisticIdx] = serverMsg;
+                                    return;
+                                }
+                             }
+                             // No optimistic duplicate found, add it
+                             currentMessages.push(serverMsg);
+                        });
+
+                        const updated = currentMessages.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
                         storage.saveMessages(updated);
                         return updated;
                     });
@@ -414,7 +450,10 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
               <p className={`text-[10px] uppercase font-bold ${selectedContact === 'global' ? 'text-white/60' : 'text-gray-400'}`}>Tous les membres</p>
             </div>
           </button>
-          {contacts.map(u => {
+          {contacts.filter(u => onlineUserIds.has(u.id)).length === 0 && (
+             <div className="p-6 text-center text-gray-400 text-xs">Aucun utilisateur en ligne</div>
+          )}
+          {contacts.filter(u => onlineUserIds.has(u.id) || (selectedContact && typeof selectedContact !== 'string' && selectedContact.id === u.id)).map(u => {
             const unread = getUnreadCount(u.id);
             return (
             <button key={u.id} onClick={() => setSelectedContact(u)} className={`w-full p-4 md:p-6 text-left flex items-center gap-4 border-b border-gray-50 transition-all ${selectedContact !== 'global' && selectedContact?.id === u.id ? 'bg-ivoryGreen text-white' : 'hover:bg-gray-50'}`}>

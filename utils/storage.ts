@@ -170,10 +170,15 @@ export const storage = {
           try {
             const { error } = await supabase.from('messages').upsert({
               id: m.id,
-              sender_id: m.fromId,
-              receiver_id: m.toId,
-              content: m.text,
-              created_at: m.createdAt
+              from_id: m.fromId,
+              to_id: m.toId,
+              text: m.text,
+              created_at: m.createdAt,
+              read: m.read || false,
+              file_name: m.fileName,
+              file_data: m.fileData,
+              file_type: m.fileType,
+              file_size: m.fileSize
             });
             if (error) console.error("Erreur sync message:", error);
           } catch (e) {
