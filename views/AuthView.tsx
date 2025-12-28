@@ -27,37 +27,64 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
   const [country, setCountry] = useState('');
   const [city, setCity] = useState('');
   const [accessCode, setAccessCode] = useState('');
+  
+  const scannerRef = React.useRef<Html5QrcodeScanner | null>(null);
 
   // QR Code Scanner Effect
   useEffect(() => {
+    // Cleanup function to handle scanner removal
+    const cleanupScanner = async () => {
+        if (scannerRef.current) {
+            try {
+                await scannerRef.current.clear();
+            } catch (e) {
+                console.error("Failed to clear scanner", e);
+            }
+            scannerRef.current = null;
+        }
+    };
+
     if (loginMethod === 'qr' && isLogin) {
         // Small delay to ensure DOM is ready
         const timeout = setTimeout(() => {
-            const scanner = new Html5QrcodeScanner(
-                "reader",
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                /* verbose= */ false
-            );
-            
-            scanner.render((decodedText) => {
-                try {
-                    const data = JSON.parse(decodedText);
-                    if (data.type === 'akwaba_login' && data.studentId) {
-                        handleIdLogin(data.studentId);
-                        scanner.clear();
+            // Ensure no existing scanner
+            cleanupScanner().then(() => {
+                const scanner = new Html5QrcodeScanner(
+                    "reader",
+                    { 
+                        fps: 10, 
+                        qrbox: { width: 250, height: 250 },
+                        aspectRatio: 1.0
+                    },
+                    /* verbose= */ false
+                );
+                
+                scannerRef.current = scanner;
+                
+                scanner.render((decodedText) => {
+                    try {
+                        const data = JSON.parse(decodedText);
+                        if (data.type === 'akwaba_login' && data.studentId) {
+                            handleIdLogin(data.studentId);
+                            // Stop scanning on success
+                            cleanupScanner();
+                        }
+                    } catch (e) {
+                        console.error("QR Invalid", e);
                     }
-                } catch (e) {
-                    console.error("QR Invalid", e);
-                }
-            }, (error) => {
-                // Ignore scan errors usually
+                }, (error) => {
+                    // Ignore scan errors usually
+                });
             });
-
-            return () => {
-                scanner.clear().catch(err => console.error("Failed to clear scanner", err));
-            };
         }, 100);
-        return () => clearTimeout(timeout);
+
+        return () => {
+            clearTimeout(timeout);
+            cleanupScanner();
+        };
+    } else {
+        // If switching away from QR, cleanup immediately
+        cleanupScanner();
     }
   }, [loginMethod, isLogin]);
 
