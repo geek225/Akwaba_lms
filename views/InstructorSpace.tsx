@@ -264,12 +264,61 @@ const InstructorSpace: React.FC<{ userRole: UserRole, currentUserId: string, for
                   </div>
                   <div className="space-y-4">
                     {modForm.quiz?.map((q, qidx) => (
-                      <div key={q.id} className="p-6 bg-gray-50 rounded-3xl space-y-4">
-                         <input value={q.text} onChange={e => {
-                           const nq = [...(modForm.quiz || [])];
-                           nq[qidx].text = e.target.value;
-                           setModForm({...modForm, quiz: nq});
-                         }} placeholder="Votre question..." className="w-full p-4 rounded-xl border-b-2 border-gray-200 focus:border-ivoryOrange bg-white font-bold text-gray-900 outline-none" />
+                      <div key={q.id} className="p-6 bg-gray-50 rounded-3xl space-y-4 border border-gray-100">
+                         <div className="flex justify-between items-start gap-4">
+                            <input value={q.text} onChange={e => {
+                              const nq = [...(modForm.quiz || [])];
+                              nq[qidx].text = e.target.value;
+                              setModForm({...modForm, quiz: nq});
+                            }} placeholder="Question..." className="flex-grow p-4 rounded-xl border-b-2 border-gray-200 focus:border-ivoryOrange bg-white font-bold text-gray-900 outline-none" />
+                            <button onClick={() => {
+                                const nq = [...(modForm.quiz || [])];
+                                nq.splice(qidx, 1);
+                                setModForm({...modForm, quiz: nq});
+                            }} className="p-3 text-red-400 hover:bg-red-50 rounded-xl"><Trash2 size={16}/></button>
+                         </div>
+
+                         <div className="space-y-2 pl-4 border-l-2 border-gray-200">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Réponses (Cochez la bonne réponse)</p>
+                            {q.options.map((opt, optIdx) => (
+                                <div key={optIdx} className="flex items-center gap-3">
+                                    <input 
+                                        type="radio" 
+                                        name={`correct-${q.id}`} 
+                                        checked={q.correctIndex === optIdx} 
+                                        onChange={() => {
+                                            const nq = [...(modForm.quiz || [])];
+                                            nq[qidx].correctIndex = optIdx;
+                                            setModForm({...modForm, quiz: nq});
+                                        }}
+                                        className="w-4 h-4 text-ivoryOrange focus:ring-ivoryOrange"
+                                    />
+                                    <input 
+                                        value={opt} 
+                                        onChange={(e) => {
+                                            const nq = [...(modForm.quiz || [])];
+                                            nq[qidx].options[optIdx] = e.target.value;
+                                            setModForm({...modForm, quiz: nq});
+                                        }} 
+                                        placeholder={`Option ${optIdx + 1}`} 
+                                        className="flex-grow p-3 rounded-lg border border-gray-100 text-sm font-bold focus:border-ivoryOrange outline-none"
+                                    />
+                                    <button onClick={() => {
+                                        const nq = [...(modForm.quiz || [])];
+                                        nq[qidx].options.splice(optIdx, 1);
+                                        // Adjust correctIndex if needed
+                                        if (q.correctIndex === optIdx) nq[qidx].correctIndex = 0;
+                                        else if (q.correctIndex > optIdx) nq[qidx].correctIndex--;
+                                        setModForm({...modForm, quiz: nq});
+                                    }} className="text-gray-300 hover:text-red-400"><X size={14}/></button>
+                                </div>
+                            ))}
+                            <button onClick={() => {
+                                const nq = [...(modForm.quiz || [])];
+                                nq[qidx].options.push('');
+                                setModForm({...modForm, quiz: nq});
+                            }} className="text-xs font-black text-ivoryGreen uppercase tracking-widest mt-2 hover:underline">+ Ajouter une option</button>
+                         </div>
                       </div>
                     ))}
                   </div>

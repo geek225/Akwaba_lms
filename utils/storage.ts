@@ -321,12 +321,9 @@ export const storage = {
   // --- INITIALIZATION & SYNC ---
   init: async () => {
     // 1. Load defaults if empty
-    if (!localStorage.getItem(COURSES_KEY)) storage.saveCourses(MOCK_COURSES);
+    if (!localStorage.getItem(COURSES_KEY)) storage.saveCourses([]);
     if (!localStorage.getItem(ENROLLMENTS_KEY)) {
-      const mockEnrolls: Enrollment[] = [
-        { userId: 'u1', courseId: 'c1', enrolledAt: new Date().toISOString(), progress: 0 }
-      ];
-      storage.saveEnrollments(mockEnrolls);
+      storage.saveEnrollments([]);
     }
 
     // 2. SYNC FROM SUPABASE
