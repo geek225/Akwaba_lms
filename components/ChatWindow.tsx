@@ -20,7 +20,7 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     // Merge local state with Supabase data if needed, but for now rely on what we have.
     // However, contacts come from storage.
     // Filter out mock users if any remaining (safety)
-    const allUsers = storage.getUsers().filter(u => u.id !== currentUser.id && u.role !== undefined);
+    const allUsers = storage.getUsers().filter(u => u.id !== currentUser.id && u.role !== undefined && !['u1', 'u2', 'u3', 'u4'].includes(u.id));
     setContacts(allUsers);
     
     // Always load messages from storage initially (offline support)
@@ -129,6 +129,9 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                     const merged = [...current];
                     
                     mappedUsers.forEach(mu => {
+                        // Skip demo users
+                        if (['u1', 'u2', 'u3', 'u4'].includes(mu.id)) return;
+                        
                         const idx = merged.findIndex(c => c.id === mu.id);
                         if (idx === -1) {
                             merged.push(mu);
@@ -138,7 +141,7 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                     
                     if (changed) {
                         storage.saveUsers(merged);
-                        setContacts(merged.filter(u => u.id !== currentUser.id && u.role !== undefined && !['u1', 'u2', 'u3', 'u4'].includes(u.id)));
+                        setContacts(merged.filter(u => u.id !== currentUser.id && u.role !== undefined));
                     }
                 }
             } catch (err) {
@@ -174,6 +177,23 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
 
                 setMessages(prev => {
                     if (prev.find(m => m.id === mappedMsg.id)) return prev;
+                    
+                    // Deduplicate optimistic messages from current user
+                    if (mappedMsg.fromId === currentUser.id) {
+                        const optimistic = prev.find(m => 
+                            m.fromId === currentUser.id && 
+                            m.text === mappedMsg.text && 
+                            m.id.startsWith('m-') &&
+                            (new Date(mappedMsg.createdAt).getTime() - new Date(m.createdAt).getTime() < 10000) // Within 10s
+                        );
+                        if (optimistic) {
+                            // Replace optimistic with real message
+                            const updated = prev.map(m => m.id === optimistic.id ? mappedMsg : m);
+                            storage.saveMessages(updated);
+                            return updated;
+                        }
+                    }
+
                     const updated = [...prev, mappedMsg];
                     storage.saveMessages(updated);
                     return updated;
@@ -241,6 +261,14 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             });
             storage.saveMessages(updatedMessages);
             setMessages(updatedMessages);
+            
+            // Force update Supabase specifically for these messages to ensure sync
+            if (supabase) {
+                const unreadIds = unreadMsgs.map(m => m.id);
+                supabase.from('messages').update({ read: true }).in('id', unreadIds).then(({ error }) => {
+                    if (error) console.error("Error marking messages read:", error);
+                });
+            }
         }
     }
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
