@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { UserRole, Course, Module, QuizQuestion, ChatMessage, User } from '../types';
 import { storage } from '../utils/storage';
 import { Plus, Video, Trash2, Edit, Book, BrainCircuit, X, CheckCircle2, ListPlus, MessageSquare, Send, Paperclip, User as UserIcon, Save, AlertTriangle, ChevronRight } from 'lucide-react';
+import ClassroomManager from './ClassroomManager';
 import ProfileEdit from '../components/ProfileEdit';
 import ChatWindow from '../components/ChatWindow';
 
@@ -52,6 +53,10 @@ const InstructorSpace: React.FC<{ currentUser: User, forceEditId?: string | null
     window.addEventListener('storage_update', loadCourses);
     return () => window.removeEventListener('storage_update', loadCourses);
   }, [currentUser.id, forceEditId]);
+
+  if (activeTab === 'classrooms') {
+      return <ClassroomManager currentUser={currentUser} onClose={() => setActiveTab('list')} />;
+  }
 
   const handleSaveCourse = (isDraft: boolean) => {
     if (!title) return alert("Le titre est requis.");
@@ -130,9 +135,9 @@ const InstructorSpace: React.FC<{ currentUser: User, forceEditId?: string | null
         </div>
         {!forceEditId && (
           <div className="flex bg-white p-1 rounded-2xl shadow-sm border border-gray-100">
-            {(['list', 'create', 'messages', 'profile'] as const).map(tab => (
+            {(['list', 'create', 'classrooms', 'messages', 'profile'] as const).map(tab => (
               <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-2.5 rounded-xl font-bold text-xs transition-all uppercase ${activeTab === tab ? 'bg-ivoryGreen text-white shadow-lg' : 'text-gray-400 hover:text-gray-600'}`}>
-                {tab === 'list' ? 'Mes Cours' : tab === 'create' ? 'Contenu' : tab === 'messages' ? 'Chat' : 'Profil'}
+                {tab === 'list' ? 'Mes Cours' : tab === 'create' ? 'Contenu' : tab === 'classrooms' ? 'Classes' : tab === 'messages' ? 'Chat' : 'Profil'}
               </button>
             ))}
           </div>

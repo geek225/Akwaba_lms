@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, UserRole } from '../types';
 import { storage } from '../utils/storage';
 import { supabase } from '../utils/supabaseClient';
-import { Mail, Lock, Eye, EyeOff, User as UserIcon, Phone, MapPin, Globe } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, User as UserIcon, Phone, MapPin, Globe, QrCode, CreditCard, Scan } from 'lucide-react';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 
 interface AuthViewProps {
   onLogin: (user: User) => void;
@@ -11,6 +12,7 @@ interface AuthViewProps {
 
 const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
   const [isLogin, setIsLogin] = useState(true);
+  const [loginMethod, setLoginMethod] = useState<'email' | 'id' | 'qr'>('email');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -19,11 +21,67 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
   // Form fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [studentId, setStudentId] = useState(''); // Pour connexion ID
   const [name, setName] = useState(''); // Nom complet
   const [phone, setPhone] = useState('');
   const [country, setCountry] = useState('');
   const [city, setCity] = useState('');
   const [accessCode, setAccessCode] = useState('');
+
+  // QR Code Scanner Effect
+  useEffect(() => {
+    if (loginMethod === 'qr' && isLogin) {
+        // Small delay to ensure DOM is ready
+        const timeout = setTimeout(() => {
+            const scanner = new Html5QrcodeScanner(
+                "reader",
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                /* verbose= */ false
+            );
+            
+            scanner.render((decodedText) => {
+                try {
+                    const data = JSON.parse(decodedText);
+                    if (data.type === 'akwaba_login' && data.studentId) {
+                        handleIdLogin(data.studentId);
+                        scanner.clear();
+                    }
+                } catch (e) {
+                    console.error("QR Invalid", e);
+                }
+            }, (error) => {
+                // Ignore scan errors usually
+            });
+
+            return () => {
+                scanner.clear().catch(err => console.error("Failed to clear scanner", err));
+            };
+        }, 100);
+        return () => clearTimeout(timeout);
+    }
+  }, [loginMethod, isLogin]);
+
+  const handleIdLogin = async (idToUse?: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+        const targetId = idToUse || studentId;
+        const users = storage.getUsers();
+        const user = users.find(u => u.studentId === targetId || u.id === targetId); // Support DB ID too for safety
+
+        if (user) {
+            // Simulate delay
+            await new Promise(r => setTimeout(r, 800));
+            onLogin(user);
+        } else {
+            throw new Error("Identifiant introuvable.");
+        }
+    } catch (e: any) {
+        setError(e.message);
+    } finally {
+        setLoading(false);
+    }
+  };
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,16 +235,104 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
         </div>
 
         <div className="p-8 md:p-16 md:w-3/5 overflow-y-auto max-h-[90vh]">
-          <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-2">{isLogin ? 'Connexion' : 'Inscription'}</h1>
-          <p className="text-gray-400 mb-6 md:mb-8">{isLogin ? 'Ravis de vous revoir !' : 'Créez votre compte pour commencer.'}</p>
+          <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-2">{isResetting ? 'Réinitialisation' : (isLogin ? 'Connexion' : 'Inscription')}</h1>
+          <p className="text-gray-400 mb-6 md:mb-8">{isResetting ? 'Entrez votre email pour recevoir un lien.' : (isLogin ? 'Ravis de vous revoir !' : 'Créez votre compte pour commencer.')}</p>
           
+          {isLogin && !isResetting && (
+            <div className="flex gap-2 mb-8 bg-gray-50 p-1 rounded-2xl">
+                <button 
+                    onClick={() => setLoginMethod('email')}
+                    className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${loginMethod === 'email' ? 'bg-white shadow-md text-ivoryGreen' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                    <Mail size={16} /> Email
+                </button>
+                <button 
+                    onClick={() => setLoginMethod('id')}
+                    className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${loginMethod === 'id' ? 'bg-white shadow-md text-ivoryGreen' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                    <CreditCard size={16} /> ID
+                </button>
+                <button 
+                    onClick={() => setLoginMethod('qr')}
+                    className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${loginMethod === 'qr' ? 'bg-white shadow-md text-ivoryGreen' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                    <QrCode size={16} /> QR
+                </button>
+            </div>
+          )}
+
           {error && (
             <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-bold border border-red-100">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {isResetting ? (
+             <form onSubmit={handleResetPassword} className="space-y-4">
+                <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Email</label>
+                    <div className="relative">
+                        <input 
+                        required 
+                        type="email" 
+                        placeholder="votre@email.ci" 
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full pl-14 pr-6 py-4 rounded-3xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-ivoryOrange outline-none font-bold text-gray-900 text-lg shadow-sm transition-all" 
+                        />
+                        <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
+                    </div>
+                </div>
+                <button 
+                    type="submit" 
+                    disabled={loading}
+                    className="w-full py-6 bg-ivoryGreen text-white rounded-3xl font-black text-xl shadow-2xl shadow-green-100 hover:bg-green-700 hover:-translate-y-1 active:translate-y-0 transition-all mt-8 disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                    {loading ? 'Envoi...' : 'Envoyer le lien'}
+                </button>
+                <button type="button" onClick={() => setIsResetting(false)} className="w-full mt-6 text-sm font-black text-gray-400 hover:text-gray-600 transition-colors">
+                    ANNULER
+                </button>
+             </form>
+          ) : (
+          <form onSubmit={loginMethod === 'id' && isLogin ? (e) => { e.preventDefault(); handleIdLogin(); } : handleSubmit} className="space-y-4">
+            
+            {/* QR LOGIN UI */}
+            {isLogin && loginMethod === 'qr' && (
+                <div className="flex flex-col items-center justify-center py-8">
+                    <div id="reader" className="w-full max-w-[300px] overflow-hidden rounded-2xl border-4 border-ivoryGreen/20"></div>
+                    <p className="text-center text-sm text-gray-500 mt-4 font-medium">Placez votre QR Code devant la caméra</p>
+                </div>
+            )}
+
+            {/* ID LOGIN UI */}
+            {isLogin && loginMethod === 'id' && (
+                 <div className="space-y-2 py-8">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Identifiant Étudiant</label>
+                    <div className="relative">
+                        <input 
+                        required 
+                        type="text" 
+                        placeholder="STU-..." 
+                        value={studentId}
+                        onChange={(e) => setStudentId(e.target.value)}
+                        className="w-full pl-14 pr-6 py-4 rounded-3xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-ivoryOrange outline-none font-bold text-gray-900 text-lg shadow-sm transition-all" 
+                        />
+                        <CreditCard className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
+                    </div>
+                    <button 
+                        type="submit" 
+                        disabled={loading}
+                        className="w-full py-6 bg-ivoryOrange text-white rounded-3xl font-black text-xl shadow-2xl shadow-orange-100 hover:bg-orange-600 hover:-translate-y-1 active:translate-y-0 transition-all mt-8 disabled:opacity-70 disabled:cursor-not-allowed"
+                    >
+                        {loading ? 'Connexion...' : 'Se connecter'}
+                    </button>
+                 </div>
+            )}
+
+            {/* EMAIL LOGIN / REGISTER UI */}
+            {(!isLogin || (isLogin && loginMethod === 'email')) && (
+            <>
             {!isLogin && (
               <>
                 <div className="space-y-2">
@@ -319,7 +465,10 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
             >
               {loading ? 'Chargement...' : (isLogin ? 'Accéder à mon espace' : "Créer mon profil")}
             </button>
+            </>
+            )}
           </form>
+          )}
           {!isResetting && (
           <button onClick={() => { setIsLogin(!isLogin); setError(null); }} className="w-full mt-10 text-sm font-black text-ivoryGreen hover:text-green-700 transition-colors">
             {isLogin ? "PAS ENCORE DE COMPTE ? S'INSCRIRE" : "DÉJÀ UN COMPTE ? SE CONNECTER"}

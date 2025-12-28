@@ -1,5 +1,5 @@
 
-import { User, Course, Enrollment, ChatMessage, BlogPost, AccessCode, UserRole, Module } from '../types';
+import { User, Course, Enrollment, ChatMessage, BlogPost, AccessCode, UserRole, Module, Classroom } from '../types';
 import { createClient } from '@supabase/supabase-js';
 
 const USERS_KEY = 'akwaba_db_users_v4';
@@ -8,6 +8,7 @@ const ENROLLMENTS_KEY = 'akwaba_db_enrollments_v4';
 const MESSAGES_KEY = 'akwaba_db_messages_v4';
 const BLOG_KEY = 'akwaba_db_blog_v4';
 const ACCESS_CODES_KEY = 'akwaba_db_codes_v4';
+const CLASSROOMS_KEY = 'akwaba_db_classrooms_v4';
 
 const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
 const supabaseKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
@@ -253,6 +254,41 @@ export const storage = {
         });
     }
   },
+
+  // --- CLASSROOMS ---
+  getClasses: (): Classroom[] => {
+    const stored = localStorage.getItem(CLASSROOMS_KEY);
+    return stored ? JSON.parse(stored) : [];
+  },
+  saveClasses: (classes: Classroom[]) => {
+    localStorage.setItem(CLASSROOMS_KEY, JSON.stringify(classes));
+    window.dispatchEvent(new Event('storage_update'));
+
+    if (supabase) {
+        classes.forEach(async (c) => {
+            const { error } = await supabase.from('classrooms').upsert({
+                id: c.id,
+                name: c.name,
+                description: c.description,
+                student_ids: c.studentIds,
+                course_ids: c.courseIds,
+                created_by: c.createdBy,
+                created_at: c.createdAt
+            });
+            if (error) console.error("Erreur sync classroom:", error);
+        });
+    }
+  },
+  generateStudentId: (): string => {
+    // Generate unique student ID (e.g., STU-12345678)
+    const chars = '0123456789';
+    let id = '';
+    for (let i = 0; i < 8; i++) {
+        id += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return `STU-${id}`;
+  },
+
   generateAccessCode: (role: UserRole, adminId: string): AccessCode => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code = '';

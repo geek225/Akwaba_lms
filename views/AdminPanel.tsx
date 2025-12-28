@@ -4,6 +4,7 @@ import { storage, supabase } from '../utils/storage';
 import { User, UserRole, Course, Enrollment, ChatMessage, AccessCode } from '../types';
 import { Search, UserPlus, X, Edit2, Trash2, Save, Filter, BookOpen, MessageSquare, Send, Paperclip, AlertTriangle, Key, Copy, Check, Database } from 'lucide-react';
 import InstructorSpace from './InstructorSpace'; // Récupération pour l'édition globale
+import ClassroomManager from './ClassroomManager';
 import ProfileEdit from '../components/ProfileEdit';
 import ChatWindow from '../components/ChatWindow';
 
@@ -49,6 +50,10 @@ const AdminPanel: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     window.addEventListener('storage_update', loadAll);
     return () => window.removeEventListener('storage_update', loadAll);
   }, []);
+
+  if (activeTab === 'classrooms') {
+    return <ClassroomManager currentUser={currentUser} onClose={() => setActiveTab('staff')} />;
+  }
 
   const handleGenerateCode = () => {
     storage.generateAccessCode(codeRole, currentUserId);

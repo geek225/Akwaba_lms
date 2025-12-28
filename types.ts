@@ -14,8 +14,19 @@ export interface AccessCode {
   createdAt: string;
 }
 
+export interface Classroom {
+  id: string;
+  name: string;
+  description?: string;
+  studentIds: string[];
+  courseIds: string[];
+  createdBy: string; // User ID (Admin/Instructor)
+  createdAt: string;
+}
+
 export interface User {
   id: string;
+  studentId?: string; // Unique Identifier (Matricule) for Login
   name: string;
   firstName: string;
   email: string;
