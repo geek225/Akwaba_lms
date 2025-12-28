@@ -55,22 +55,31 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
                 const html5QrCode = new Html5Qrcode("reader");
                 scannerRef.current = html5QrCode;
 
-                const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+                const config = { 
+                    fps: 15, 
+                    aspectRatio: 1.0
+                };
                 
                 // Start scanning directly with rear camera
                 html5QrCode.start(
                     { facingMode: "environment" }, 
                     config,
                     (decodedText) => {
+                        console.log("QR Code scanned:", decodedText);
                         try {
                             const data = JSON.parse(decodedText);
                             if (data.type === 'akwaba_login' && data.studentId) {
+                                // Visual feedback or sound could be added here
                                 handleIdLogin(data.studentId);
                                 // Stop scanning on success
                                 cleanupScanner();
+                            } else {
+                                console.warn("Invalid QR code format:", data);
+                                setError("QR Code non reconnu. Est-ce un code Akwaba ?");
                             }
                         } catch (e) {
-                            console.error("QR Invalid", e);
+                            console.error("QR Invalid JSON", e);
+                            // Don't show error to user for every frame, just log
                         }
                     },
                     (errorMessage) => {
