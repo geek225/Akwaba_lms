@@ -399,12 +399,12 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                     </div>
                 )}
               </div>
-              <div className="flex-grow">
+              <div className="flex-grow min-w-0">
                 <div className="flex justify-between items-center">
-                    <p className="font-black text-sm">{u.firstName} {u.name}</p>
-                    {unread > 0 && <span className="w-2 h-2 bg-red-500 rounded-full"></span>}
+                    <p className="font-black text-sm truncate">{u.firstName} {u.name}</p>
+                    {onlineUserIds.has(u.id) && <span className="text-[9px] font-bold uppercase tracking-widest text-green-500 bg-green-100 px-2 py-0.5 rounded-full">En ligne</span>}
                 </div>
-                <p className={`text-[10px] uppercase font-bold ${selectedContact !== 'global' && selectedContact?.id === u.id ? 'text-white/60' : 'text-gray-400'}`}>{u.role}</p>
+                <p className={`text-[10px] uppercase font-bold truncate ${selectedContact !== 'global' && selectedContact?.id === u.id ? 'text-white/60' : 'text-gray-400'}`}>{u.role}</p>
               </div>
             </button>
             );

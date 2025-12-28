@@ -337,6 +337,30 @@ export const storage = {
         console.error("Error cleaning mock courses:", e);
     }
 
+    // CLEANUP: Remove MOCK_USERS (u1-u4) and their messages
+    try {
+        const currentUsers = storage.getUsers();
+        const mockUserIds = ['u1', 'u2', 'u3', 'u4'];
+        const hasMockUsers = currentUsers.some(u => mockUserIds.includes(u.id));
+        
+        if (hasMockUsers) {
+            console.log("Cleaning up mock users...");
+            const cleanUsers = currentUsers.filter(u => !mockUserIds.includes(u.id));
+            storage.saveUsers(cleanUsers);
+
+            // Clean associated messages
+            const currentMessages = storage.getMessages();
+            const cleanMessages = currentMessages.filter(m => 
+                !mockUserIds.includes(m.fromId) && !mockUserIds.includes(m.toId)
+            );
+            if (cleanMessages.length !== currentMessages.length) {
+                storage.saveMessages(cleanMessages);
+            }
+        }
+    } catch (e) {
+        console.error("Error cleaning mock users:", e);
+    }
+
     if (!localStorage.getItem(ENROLLMENTS_KEY)) {
       storage.saveEnrollments([]);
     }
