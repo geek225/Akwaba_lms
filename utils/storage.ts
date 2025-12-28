@@ -361,6 +361,40 @@ export const storage = {
         console.error("Error cleaning mock users:", e);
     }
 
+    // CLEANUP: Scan for broken image URLs (e.g., Pixabay webpage links instead of images)
+    try {
+        const posts = storage.getPosts();
+        let postsChanged = false;
+        const cleanPosts = posts.map(p => {
+            if (p.coverImage && p.coverImage.includes('pixabay.com/photos/')) {
+                // Replace webpage URL with a safe placeholder
+                postsChanged = true;
+                return { ...p, coverImage: 'https://placehold.co/800x600/4CAF50/FFFFFF?text=Akwaba+Blog' };
+            }
+            return p;
+        });
+        if (postsChanged) {
+             console.log("Fixed broken blog image URLs");
+             storage.savePosts(cleanPosts);
+        }
+
+        const courses = storage.getCourses();
+        let coursesChanged = false;
+        const cleanCourses = courses.map(c => {
+            if (c.thumbnail && c.thumbnail.includes('pixabay.com/photos/')) {
+                 coursesChanged = true;
+                 return { ...c, thumbnail: 'https://placehold.co/800x600/FF8800/FFFFFF?text=Akwaba+Course' };
+            }
+            return c;
+        });
+        if (coursesChanged) {
+            console.log("Fixed broken course image URLs");
+            storage.saveCourses(cleanCourses);
+        }
+    } catch (e) {
+        console.error("Error cleaning image URLs:", e);
+    }
+
     if (!localStorage.getItem(ENROLLMENTS_KEY)) {
       storage.saveEnrollments([]);
     }

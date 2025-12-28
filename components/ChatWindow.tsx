@@ -70,77 +70,79 @@ const ChatWindow: React.FC<{ currentUser: User }> = ({ currentUser }) => {
         setSyncStatus('syncing');
         // 1. Initial Fetch
         const fetchMessages = async () => {
-             const { data, error } = await supabase!.from('messages').select('*').order('created_at', { ascending: true });
-             if (error) {
-                 console.error("Erreur fetch messages:", error);
+             if (!navigator.onLine) {
                  setSyncStatus('error');
-             } else if (data) {
-                setSyncStatus('synced');
-                const mapped: ChatMessage[] = data.map((r: any) => ({
-                   id: r.id,
-                   fromId: r.from_id,
-                   toId: r.to_id,
-                   text: r.text,
-                   fileName: r.file_name,
-                   fileData: r.file_data,
-                   fileType: r.file_type,
-                   fileSize: r.file_size,
-                   createdAt: r.created_at,
-                   read: r.read
-                }));
-                // Merge strategies could be complex, but for simplicity we assume server is truth.
-                // However, we must preserve optimistic updates that are not yet on server?
-                // Actually, if we just append new ones, it's safer.
-                setMessages(prev => {
-                    // Create a map of existing IDs for fast lookup
-                    const existingIds = new Set(prev.map(m => m.id));
-                    const newMessages = mapped.filter(m => !existingIds.has(m.id));
-                    if (newMessages.length === 0) return prev;
-                    
-                    const updated = [...prev, ...newMessages].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-                    storage.saveMessages(updated);
-                    return updated;
-                });
+                 return;
+             }
+             try {
+                 const { data, error } = await supabase!.from('messages').select('*').order('created_at', { ascending: true });
+                 if (error) {
+                     console.error("Erreur fetch messages:", error);
+                     setSyncStatus('error');
+                 } else if (data) {
+                    setSyncStatus('synced');
+                    const mapped: ChatMessage[] = data.map((r: any) => ({
+                       id: r.id,
+                       fromId: r.from_id,
+                       toId: r.to_id,
+                       text: r.text,
+                       fileName: r.file_name,
+                       fileData: r.file_data,
+                       fileType: r.file_type,
+                       fileSize: r.file_size,
+                       createdAt: r.created_at,
+                       read: r.read
+                    }));
+                    setMessages(prev => {
+                        const existingIds = new Set(prev.map(m => m.id));
+                        const newMessages = mapped.filter(m => !existingIds.has(m.id));
+                        if (newMessages.length === 0) return prev;
+                        
+                        const updated = [...prev, ...newMessages].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+                        storage.saveMessages(updated);
+                        return updated;
+                    });
+                 }
+             } catch (err) {
+                 console.error("Exception fetch messages:", err);
+                 setSyncStatus('error');
              }
         };
 
         const fetchUsers = async () => {
-            const { data: users, error: userError } = await supabase!.from('users').select('*');
-            if (!userError && users) {
-                const mappedUsers: User[] = users.map((u: any) => ({
-                    id: u.id,
-                    name: u.name,
-                    firstName: u.first_name,
-                    email: u.email,
-                    role: u.role,
-                    avatar: u.avatar,
-                    createdAt: u.created_at || new Date().toISOString()
-                }));
-                
-                const current = storage.getUsers();
-                let changed = false;
-                // Merge users avoiding duplicates
-                // We prefer server data
-                const merged = [...current];
-                
-                mappedUsers.forEach(mu => {
-                    const idx = merged.findIndex(c => c.id === mu.id);
-                    if (idx === -1) {
-                        merged.push(mu);
-                        changed = true;
-                    } else {
-                        // Update existing if needed? For now, keep local if conflict, 
-                        // or overwrite? Let's overwrite to ensure Admin details are correct.
-                        // But we must be careful not to lose local-only data if any.
-                        // Actually, let's just add missing ones for now.
+            if (!navigator.onLine) return;
+            try {
+                const { data: users, error: userError } = await supabase!.from('users').select('*');
+                if (!userError && users) {
+                    const mappedUsers: User[] = users.map((u: any) => ({
+                        id: u.id,
+                        name: u.name,
+                        firstName: u.first_name,
+                        email: u.email,
+                        role: u.role,
+                        avatar: u.avatar,
+                        createdAt: u.created_at || new Date().toISOString()
+                    }));
+                    
+                    const current = storage.getUsers();
+                    let changed = false;
+                    const merged = [...current];
+                    
+                    mappedUsers.forEach(mu => {
+                        const idx = merged.findIndex(c => c.id === mu.id);
+                        if (idx === -1) {
+                            merged.push(mu);
+                            changed = true;
+                        }
+                    });
+                    
+                    if (changed) {
+                        storage.saveUsers(merged);
+                        setContacts(merged.filter(u => u.id !== currentUser.id && u.role !== undefined && !['u1', 'u2', 'u3', 'u4'].includes(u.id)));
                     }
-                });
-                
-                if (changed) {
-                    storage.saveUsers(merged);
-                    // Force update contacts
-                    setContacts(merged.filter(u => u.id !== currentUser.id && u.role !== undefined));
                 }
+            } catch (err) {
+                console.error("Exception fetch users:", err);
             }
         };
 
