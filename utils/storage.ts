@@ -256,17 +256,66 @@ export const storage = {
     storage.saveAccessCodes([...codes, newCode]);
     return newCode;
   },
-  validateAndUseCode: (code: string): UserRole | null => {
-    const codes = storage.getAccessCodes();
-    const foundIndex = codes.findIndex(c => c.code === code && !c.isUsed);
+  validateCode: async (code: string): Promise<UserRole | null> => {
+    // 1. Check local
+    const localCodes = storage.getAccessCodes();
+    const localCode = localCodes.find(c => c.code === code);
     
-    if (foundIndex !== -1) {
-        const updatedCodes = [...codes];
-        updatedCodes[foundIndex].isUsed = true;
-        storage.saveAccessCodes(updatedCodes);
-        return updatedCodes[foundIndex].role;
+    if (localCode) {
+        if (!localCode.isUsed) return localCode.role;
+        // If local says used, verify with server in case of sync error? 
+        // No, safer to assume used.
+        return null; 
+    }
+
+    // 2. Check Supabase (if not found locally)
+    if (supabase) {
+        const { data, error } = await supabase
+            .from('access_codes')
+            .select('*')
+            .eq('code', code)
+            .single();
+        
+        if (data && !data.is_used) {
+             // Cache it locally for future reference
+             const newCode: AccessCode = {
+                code: data.code,
+                role: data.role as UserRole,
+                isUsed: data.is_used,
+                generatedBy: data.generated_by,
+                createdAt: data.created_at
+            };
+            // Merge carefully
+            const current = storage.getAccessCodes();
+            if (!current.find(c => c.code === newCode.code)) {
+                storage.saveAccessCodes([...current, newCode]);
+            }
+            return data.role as UserRole;
+        }
     }
     return null;
+  },
+
+  markCodeAsUsed: async (code: string) => {
+      // 1. Update Local
+      const codes = storage.getAccessCodes();
+      const updated = codes.map(c => c.code === code ? { ...c, isUsed: true } : c);
+      
+      // If code wasn't local (fetched from Supabase during validate), we need to add it marked as used
+      if (!codes.find(c => c.code === code)) {
+          // We can't easily reconstruct the whole object without fetching again, 
+          // but we know it's used.
+          // Let's rely on the fact validateCode added it to cache, 
+          // OR we fetch it again?
+          // Actually validateCode added it to cache above.
+      } else {
+          storage.saveAccessCodes(updated);
+      }
+
+      // 2. Update Supabase
+      if (supabase) {
+          await supabase.from('access_codes').update({ is_used: true }).eq('code', code);
+      }
   },
 
   // --- INITIALIZATION & SYNC ---

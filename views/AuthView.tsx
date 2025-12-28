@@ -90,7 +90,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
             }
 
             if (accessCode.trim()) {
-                const role = storage.validateAndUseCode(accessCode.trim());
+                const role = await storage.validateCode(accessCode.trim());
                 if (role) {
                     assignedRole = role;
                 } else {
@@ -116,6 +116,9 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
         if (error) throw error;
 
         if (data.user) {
+            if (accessCode.trim()) {
+                await storage.markCodeAsUsed(accessCode.trim());
+            }
             alert('Inscription réussie ! Veuillez vérifier votre boîte mail pour confirmer votre compte avant de vous connecter.');
             setIsLogin(true);
         }
