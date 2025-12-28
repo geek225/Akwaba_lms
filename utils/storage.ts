@@ -1,6 +1,5 @@
 
 import { User, Course, Enrollment, ChatMessage, BlogPost, AccessCode, UserRole, Module } from '../types';
-import { MOCK_USERS, MOCK_COURSES } from '../constants';
 import { createClient } from '@supabase/supabase-js';
 
 const USERS_KEY = 'akwaba_db_users_v4';
