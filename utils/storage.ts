@@ -322,6 +322,21 @@ export const storage = {
   init: async () => {
     // 1. Load defaults if empty
     if (!localStorage.getItem(COURSES_KEY)) storage.saveCourses([]);
+    
+    // CLEANUP: Remove MOCK_COURSES if they exist (ids c1-c5) to fix "demo courses" issue
+    try {
+        const currentCourses = storage.getCourses();
+        const mockIds = ['c1', 'c2', 'c3', 'c4', 'c5'];
+        const hasMocks = currentCourses.some(c => mockIds.includes(c.id));
+        if (hasMocks) {
+            console.log("Cleaning up mock courses...");
+            const cleanCourses = currentCourses.filter(c => !mockIds.includes(c.id));
+            storage.saveCourses(cleanCourses);
+        }
+    } catch (e) {
+        console.error("Error cleaning mock courses:", e);
+    }
+
     if (!localStorage.getItem(ENROLLMENTS_KEY)) {
       storage.saveEnrollments([]);
     }

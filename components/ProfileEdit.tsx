@@ -71,7 +71,12 @@ const ProfileEdit: React.FC<{ userId: string; initialUser?: User }> = ({ userId,
     }
   };
 
-  if (!user) return null;
+  if (!user) return (
+    <div className="text-center py-20 text-gray-400 font-bold flex flex-col items-center gap-4 animate-pulse">
+        <UserIcon size={48} className="text-gray-200" />
+        <p>Chargement du profil...</p>
+    </div>
+  );
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 md:space-y-12 animate-in slide-in-from-bottom-10 duration-500 pb-20">

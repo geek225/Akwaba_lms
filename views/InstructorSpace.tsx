@@ -291,7 +291,8 @@ const InstructorSpace: React.FC<{ userRole: UserRole, currentUserId: string, for
                                             nq[qidx].correctIndex = optIdx;
                                             setModForm({...modForm, quiz: nq});
                                         }}
-                                        className="w-4 h-4 text-ivoryOrange focus:ring-ivoryOrange"
+                                        className="w-4 h-4 text-ivoryOrange focus:ring-ivoryOrange cursor-pointer"
+                                        title="Marquer comme bonne réponse"
                                     />
                                     <input 
                                         value={opt} 
@@ -300,8 +301,8 @@ const InstructorSpace: React.FC<{ userRole: UserRole, currentUserId: string, for
                                             nq[qidx].options[optIdx] = e.target.value;
                                             setModForm({...modForm, quiz: nq});
                                         }} 
-                                        placeholder={`Option ${optIdx + 1}`} 
-                                        className="flex-grow p-3 rounded-lg border border-gray-100 text-sm font-bold focus:border-ivoryOrange outline-none"
+                                        placeholder={`Réponse ${optIdx + 1}`} 
+                                        className="flex-grow p-3 rounded-lg border border-gray-200 bg-white text-sm font-bold focus:border-ivoryOrange outline-none"
                                     />
                                     <button onClick={() => {
                                         const nq = [...(modForm.quiz || [])];
@@ -317,7 +318,7 @@ const InstructorSpace: React.FC<{ userRole: UserRole, currentUserId: string, for
                                 const nq = [...(modForm.quiz || [])];
                                 nq[qidx].options.push('');
                                 setModForm({...modForm, quiz: nq});
-                            }} className="text-xs font-black text-ivoryGreen uppercase tracking-widest mt-2 hover:underline">+ Ajouter une option</button>
+                            }} className="text-xs font-black text-ivoryGreen uppercase tracking-widest mt-2 hover:underline flex items-center gap-1">+ Ajouter une réponse</button>
                          </div>
                       </div>
                     ))}
