@@ -6,11 +6,11 @@ import { Plus, Video, Trash2, Edit, Book, BrainCircuit, X, CheckCircle2, ListPlu
 import ProfileEdit from '../components/ProfileEdit';
 import ChatWindow from '../components/ChatWindow';
 
-const InstructorSpace: React.FC<{ userRole: UserRole, currentUserId: string, forceEditId?: string | null }> = ({ userRole, currentUserId, forceEditId }) => {
+const InstructorSpace: React.FC<{ currentUser: User, forceEditId?: string | null }> = ({ currentUser, forceEditId }) => {
   const [activeTab, setActiveTab] = useState<'list' | 'create' | 'messages' | 'profile'>(forceEditId ? 'create' : 'list');
   const [courses, setCourses] = useState<Course[]>([]);
   const [editingId, setEditingId] = useState<string | null>(forceEditId || null);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(currentUser);
   
   // UI States
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
@@ -31,22 +31,23 @@ const InstructorSpace: React.FC<{ userRole: UserRole, currentUserId: string, for
 
   const loadCourses = () => {
     const all = storage.getCourses();
-    setCourses(all.filter(c => c.instructorId === currentUserId || userRole === UserRole.ADMIN));
+    setCourses(all.filter(c => c.instructorId === currentUser.id || currentUser.role === UserRole.ADMIN));
     if (forceEditId) {
       const c = all.find(x => x.id === forceEditId);
       if (c) { 
         setTitle(c.title); setCategory(c.category); setDesc(c.description); setModules(c.modules); setThumbnail(c.thumbnail);
       }
     }
-    const currentUser = storage.getUsers().find(u => u.id === currentUserId);
-    if (currentUser) setUser(currentUser);
+    // Try to update user from storage if available, otherwise keep prop
+    const foundUser = storage.getUsers().find(u => u.id === currentUser.id);
+    if (foundUser) setUser(foundUser);
   };
 
   useEffect(() => {
     loadCourses();
     window.addEventListener('storage_update', loadCourses);
     return () => window.removeEventListener('storage_update', loadCourses);
-  }, [currentUserId, forceEditId]);
+  }, [currentUser.id, forceEditId]);
 
   const handleSaveCourse = (isDraft: boolean) => {
     if (!title) return alert("Le titre est requis.");
@@ -56,7 +57,7 @@ const InstructorSpace: React.FC<{ userRole: UserRole, currentUserId: string, for
       id: editingId || `c-${Date.now()}`,
       title, category: finalCategory, description: desc,
       instructor: user ? `${user.firstName} ${user.name}` : "Formateur",
-      instructorId: editingId ? (all.find(x => x.id === editingId)?.instructorId || currentUserId) : currentUserId,
+      instructorId: editingId ? (all.find(x => x.id === editingId)?.instructorId || currentUser.id) : currentUser.id,
       thumbnail: thumbnail || `https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=800`,
       createdAt: new Date().toISOString(),
       isDraft, modules
@@ -116,9 +117,9 @@ const InstructorSpace: React.FC<{ userRole: UserRole, currentUserId: string, for
       </div>
 
       {activeTab === 'profile' ? (
-        <ProfileEdit userId={currentUserId} />
+        <ProfileEdit userId={currentUser.id} initialUser={user || undefined} />
       ) : activeTab === 'messages' ? (
-        <ChatWindow currentUser={user!} />
+        user ? <ChatWindow currentUser={user} /> : <div className="text-center py-20 text-gray-400 font-bold">Chargement du profil chat...</div>
       ) : activeTab === 'list' ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
           {courses.map(c => (

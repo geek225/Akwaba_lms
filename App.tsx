@@ -79,7 +79,7 @@ const App: React.FC = () => {
         return <AdminPanel currentUser={currentUser} />;
       case UserRole.INSTRUCTOR:
       case UserRole.EDITOR:
-        return <InstructorSpace userRole={currentUser.role} currentUserId={currentUser.id} />;
+        return <InstructorSpace currentUser={currentUser} />;
       case UserRole.STUDENT:
         return <StudentDashboard initialCourse={selectedCourse} currentUser={currentUser} />;
       default:
