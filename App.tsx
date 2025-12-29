@@ -12,13 +12,31 @@ import ContactView from './views/ContactView';
 import BlogView from './views/BlogView';
 import BlogEditor from './views/BlogEditor';
 
+import { supabase } from './utils/supabaseClient';
+
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentView, setCurrentView] = useState<'home' | 'dashboard' | 'auth' | 'contact' | 'blog' | 'blog_editor'>('home');
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
+    // Online/Offline listener
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Supabase Auth Listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_OUT') {
+            // Only clear if we are actually logged out by Supabase (e.g. manual logout or expired session)
+            // We rely on localStorage for offline access, so we only clear if explicitly signed out
+            // But if the token is invalid, Supabase might fire SIGNED_OUT
+        }
+    });
+
     storage.init();
     const stored = localStorage.getItem('akwaba_session');
     if (stored) {
@@ -26,6 +44,12 @@ const App: React.FC = () => {
       setCurrentUser(u);
       setCurrentView('dashboard');
     }
+
+    return () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+        subscription.unsubscribe();
+    };
   }, []);
 
   const handleLogin = (user: User) => {
@@ -121,6 +145,14 @@ const App: React.FC = () => {
                     </button>
                 </div>
             </div>
+        </div>
+      )}
+
+      {/* Offline Indicator */}
+      {!isOnline && (
+        <div className="fixed bottom-4 left-4 z-[200] bg-gray-900 text-white px-6 py-3 rounded-full font-bold text-xs shadow-xl animate-bounce flex items-center gap-3">
+            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+            Connexion perdue. Mode hors-ligne activé.
         </div>
       )}
 
