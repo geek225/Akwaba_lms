@@ -101,8 +101,27 @@ const App: React.FC = () => {
     switch (currentUser.role) {
       case UserRole.ADMIN:
         return <AdminPanel currentUser={currentUser} />;
-      case UserRole.INSTRUCTOR:
-      case UserRole.EDITOR:
+      case UserRole.CABINET:
+        return <CabiEDITOR:
+        // Check validation status for instructors
+        if (currentUser.role === UserRole.INSTRUCTOR && currentUser.isValidated === false) {
+             return (
+                 <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+                     <div className="max-w-md w-full bg-white p-8 rounded-3xl shadow-xl text-center space-y-6">
+                         <div className="w-20 h-20 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto">
+                             <span className="text-3xl">⏳</span>
+                         </div>
+                         <h2 className="text-2xl font-black text-gray-900">Compte en attente de validation</h2>
+                         <p className="text-gray-500 font-medium">
+                             Votre inscription a bien été prise en compte. Votre cabinet de rattachement doit valider votre profil avant que vous puissiez accéder à votre espace formateur.
+                         </p>
+                         <button onClick={confirmLogout} className="text-sm font-bold text-gray-400 hover:text-gray-600 underline">
+                             Se déconnecter
+                         </button>
+                     </div>
+                 </div>
+             );
+        }
         return <InstructorSpace currentUser={currentUser} />;
       case UserRole.STUDENT:
         return <StudentDashboard initialCourse={selectedCourse} currentUser={currentUser} />;
