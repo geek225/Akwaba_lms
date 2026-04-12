@@ -31,6 +31,7 @@ export interface User {
   firstName: string;
   email: string;
   role: UserRole;
+  isValidated?: boolean;
   avatar: string;
   phone?: string;
   country?: string;
