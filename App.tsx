@@ -14,6 +14,24 @@ import BlogEditor from './views/BlogEditor';
 
 import { supabase } from './utils/supabaseClient';
 
+const normalizeRole = (rawRole: unknown): UserRole => {
+  const value = String(rawRole || '').trim().toLowerCase();
+
+  if (value === String(UserRole.ADMIN).toLowerCase() || value === 'admin' || value === 'administrator' || value === 'administrateur') {
+    return UserRole.ADMIN;
+  }
+  if (value === String(UserRole.CABINET).toLowerCase() || value === 'cabinet') {
+    return UserRole.CABINET;
+  }
+  if (value === String(UserRole.INSTRUCTOR).toLowerCase() || value === 'instructor' || value === 'formateur') {
+    return UserRole.INSTRUCTOR;
+  }
+  if (value === String(UserRole.EDITOR).toLowerCase() || value === 'editor' || value === 'editeur' || value === 'editeur') {
+    return UserRole.EDITOR;
+  }
+  return UserRole.STUDENT;
+};
+
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentView, setCurrentView] = useState<'home' | 'dashboard' | 'auth' | 'contact' | 'blog' | 'blog_editor'>('home');
@@ -40,8 +58,10 @@ const App: React.FC = () => {
     storage.init();
     const stored = localStorage.getItem('akwaba_session');
     if (stored) {
-      const u = JSON.parse(stored);
-      setCurrentUser(u);
+      const u = JSON.parse(stored) as User;
+      const normalizedUser: User = { ...u, role: normalizeRole(u.role) };
+      setCurrentUser(normalizedUser);
+      localStorage.setItem('akwaba_session', JSON.stringify(normalizedUser));
       setCurrentView('dashboard');
     }
 
@@ -53,16 +73,18 @@ const App: React.FC = () => {
   }, []);
 
   const handleLogin = (user: User) => {
+    const normalizedIncoming: User = { ...user, role: normalizeRole(user.role) };
+
     // Hardcoded Super Admin Override
-    if (user.email === 'admin@akwaba.ci') {
-        user.role = UserRole.ADMIN;
+    if (normalizedIncoming.email === 'admin@akwaba.ci') {
+      normalizedIncoming.role = UserRole.ADMIN;
     }
 
     const users = storage.getUsers();
-    const existing = users.find(u => u.id === user.id || u.email.toLowerCase() === user.email.toLowerCase());
+    const existing = users.find(u => u.id === normalizedIncoming.id || u.email.toLowerCase() === normalizedIncoming.email.toLowerCase());
     const mergedUser: User = existing
-      ? { ...existing, ...user, isValidated: existing.isValidated ?? user.isValidated }
-      : user;
+      ? { ...existing, ...normalizedIncoming, isValidated: existing.isValidated ?? normalizedIncoming.isValidated }
+      : normalizedIncoming;
 
     if (!existing) {
       storage.saveUsers([mergedUser, ...users]);

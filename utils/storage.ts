@@ -17,14 +17,24 @@ export const supabase = (supabaseUrl && supabaseKey)
   ? createClient(supabaseUrl, supabaseKey) 
   : null;
 
+const normalizeRole = (rawRole: unknown): UserRole => {
+  const value = String(rawRole || '').trim().toLowerCase();
+  if (value === String(UserRole.ADMIN).toLowerCase() || value === 'admin' || value === 'administrator' || value === 'administrateur') return UserRole.ADMIN;
+  if (value === String(UserRole.CABINET).toLowerCase() || value === 'cabinet') return UserRole.CABINET;
+  if (value === String(UserRole.INSTRUCTOR).toLowerCase() || value === 'instructor' || value === 'formateur') return UserRole.INSTRUCTOR;
+  if (value === String(UserRole.EDITOR).toLowerCase() || value === 'editor' || value === 'editeur' || value === 'éditeur') return UserRole.EDITOR;
+  return UserRole.STUDENT;
+};
+
 export const storage = {
   // --- USERS ---
   getUsers: (): User[] => {
     try {
       const stored = localStorage.getItem(USERS_KEY);
       const users: User[] = stored ? JSON.parse(stored) : [];
+      const normalizedUsers = users.map(u => ({ ...u, role: normalizeRole(u.role) }));
       // HARD FILTER: Never return demo users even if they exist in storage
-      return users.filter(u => !['u1', 'u2', 'u3', 'u4'].includes(u.id));
+      return normalizedUsers.filter(u => !['u1', 'u2', 'u3', 'u4'].includes(u.id));
     } catch (e) {
       console.error("Erreur lecture users:", e);
       return [];
@@ -44,7 +54,7 @@ export const storage = {
             email: u.email,
             name: u.name,
             first_name: u.firstName,
-            role: u.role,
+            role: normalizeRole(u.role),
             avatar: u.avatar,
             phone: u.phone,
             country: u.country,
@@ -487,7 +497,7 @@ export const storage = {
                 email: u.email,
                 name: u.name,
                 firstName: u.first_name,
-                role: u.role as UserRole,
+                role: normalizeRole(u.role),
                 isValidated: existingLocalUsers.find(local => local.id === u.id)?.isValidated ?? true,
                 avatar: u.avatar,
                 phone: u.phone,
