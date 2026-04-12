@@ -295,7 +295,11 @@ export const storage = {
     for (let i = 0; i < 8; i++) {
         code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    const prefix = role === UserRole.ADMIN ? 'ADM-' : (role === UserRole.INSTRUCTOR ? 'INS-' : 'EDT-');
+    const prefix =
+      role === UserRole.ADMIN ? 'ADM-' :
+      role === UserRole.CABINET ? 'CAB-' :
+      role === UserRole.INSTRUCTOR ? 'INS-' :
+      'EDT-';
     code = prefix + code;
 
     const newCode: AccessCode = {
@@ -477,12 +481,14 @@ export const storage = {
         // A. Users (MUST BE FIRST to avoid FK errors)
         const { data: users } = await supabase.from('users').select('*');
         if (users && users.length > 0) {
+            const existingLocalUsers = storage.getUsers();
             const mappedUsers: User[] = users.map((u: any) => ({
                 id: u.id,
                 email: u.email,
                 name: u.name,
                 firstName: u.first_name,
                 role: u.role as UserRole,
+                isValidated: existingLocalUsers.find(local => local.id === u.id)?.isValidated ?? true,
                 avatar: u.avatar,
                 phone: u.phone,
                 country: u.country,

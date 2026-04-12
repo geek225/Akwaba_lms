@@ -57,9 +57,19 @@ const App: React.FC = () => {
     if (user.email === 'admin@akwaba.ci') {
         user.role = UserRole.ADMIN;
     }
-    
-    setCurrentUser(user);
-    localStorage.setItem('akwaba_session', JSON.stringify(user));
+
+    const users = storage.getUsers();
+    const existing = users.find(u => u.id === user.id || u.email.toLowerCase() === user.email.toLowerCase());
+    const mergedUser: User = existing
+      ? { ...existing, ...user, isValidated: existing.isValidated ?? user.isValidated }
+      : user;
+
+    if (!existing) {
+      storage.saveUsers([mergedUser, ...users]);
+    }
+
+    setCurrentUser(mergedUser);
+    localStorage.setItem('akwaba_session', JSON.stringify(mergedUser));
     setCurrentView('dashboard');
   };
 
@@ -100,6 +110,8 @@ const App: React.FC = () => {
 
     switch (currentUser.role) {
       case UserRole.ADMIN:
+        return <AdminPanel currentUser={currentUser} />;
+      case UserRole.CABINET:
         return <AdminPanel currentUser={currentUser} />;
       case UserRole.INSTRUCTOR:
         if (currentUser.isValidated === false) {

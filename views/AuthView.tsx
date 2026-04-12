@@ -181,6 +181,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
                 name: metadata.full_name || 'Utilisateur',
                 firstName: '', // Can be parsed from name if needed
                 role: (metadata.role as UserRole) || UserRole.STUDENT,
+                isValidated: metadata.isValidated !== false,
                 avatar: `https://i.pravatar.cc/150?u=${data.user.email}`,
                 phone: metadata.phone,
                 country: metadata.country,
@@ -193,6 +194,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
       } else {
         // Registration Logic
         let assignedRole = UserRole.STUDENT;
+        let assignedIsValidated = true;
 
         if (!isLogin) {
             const phoneRegex = /^\+[0-9]+$/;
@@ -204,6 +206,9 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
                 const role = await storage.validateCode(accessCode.trim());
                 if (role) {
                     assignedRole = role;
+                    if (role === UserRole.INSTRUCTOR) {
+                        assignedIsValidated = false;
+                    }
                 } else {
                     throw new Error("Code d'accès invalide ou déjà utilisé.");
                 }
@@ -221,6 +226,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
               country,
               city,
               role: assignedRole,
+              isValidated: assignedIsValidated,
             },
           },
         });
@@ -454,7 +460,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onLogin }) => {
 
                 <div className="space-y-2 pt-4 border-t border-gray-50">
                    <label className="text-[10px] font-black text-ivoryOrange uppercase tracking-widest ml-1">Code D'accès (Optionnel)</label>
-                   <p className="text-xs text-gray-400 mb-2 ml-1">Si vous êtes formateur ou administrateur, entrez votre code ici.</p>
+                   <p className="text-xs text-gray-400 mb-2 ml-1">Si vous êtes formateur, cabinet ou administrateur, entrez votre code ici.</p>
                    <div className="relative">
                      <input 
                        type="text" 

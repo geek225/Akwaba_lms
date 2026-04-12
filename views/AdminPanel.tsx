@@ -37,6 +37,7 @@ const AdminPanel: React.FC<{ currentUser: User }> = ({ currentUser }) => {
   // Access Codes
   const [codeRole, setCodeRole] = useState<UserRole>(UserRole.INSTRUCTOR);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const canModerateInstructors = currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.CABINET;
 
   const loadAll = () => {
     setUsers(storage.getUsers());
@@ -70,6 +71,14 @@ const AdminPanel: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     if (window.confirm("Voulez-vous vraiment supprimer ce code d'accès ?")) {
         storage.deleteAccessCode(code);
     }
+  };
+
+  const handleToggleInstructorValidation = (userId: string, isValidated: boolean) => {
+    const updated = storage.getUsers().map(u => {
+      if (u.id !== userId) return u;
+      return { ...u, isValidated };
+    });
+    storage.saveUsers(updated);
   };
 
   const cleanDemoData = async () => {
@@ -123,12 +132,14 @@ const AdminPanel: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     if (editingUser) {
       updated = all.map(u => u.id === editingUser.id ? { ...u, ...userFormData, avatar: `https://i.pravatar.cc/150?u=${userFormData.email}` } : u);
     } else {
+      const nextRole = userFormData.role || UserRole.STUDENT;
       const newUser: User = {
         id: `u-${Date.now()}`,
         name: userFormData.name || '',
         firstName: userFormData.firstName || '',
         email: userFormData.email || '',
-        role: userFormData.role || UserRole.STUDENT,
+        role: nextRole,
+        isValidated: nextRole === UserRole.INSTRUCTOR ? false : true,
         avatar: `https://i.pravatar.cc/150?u=${userFormData.email}`,
         createdAt: new Date().toISOString(),
         ...userFormData
@@ -227,12 +238,13 @@ const AdminPanel: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                     <Key size={40} />
                 </div>
                 <h2 className="text-3xl font-black mb-6 text-gray-900 tracking-tighter leading-none">Générateur de Codes</h2>
-                <p className="text-gray-400 font-bold text-sm mb-10 leading-relaxed">Créez des codes d'accès uniques pour permettre l'inscription directe de Formateurs, Éditeurs ou Administrateurs.</p>
+                <p className="text-gray-400 font-bold text-sm mb-10 leading-relaxed">Créez des codes d'accès uniques pour permettre l'inscription directe de Formateurs, Cabinets, Éditeurs ou Administrateurs.</p>
                 
                 <div className="space-y-4">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Rôle à attribuer</label>
                     <select value={codeRole} onChange={e => setCodeRole(e.target.value as UserRole)} className="w-full p-6 bg-gray-50 rounded-3xl border-2 border-transparent focus:border-ivoryOrange focus:bg-white outline-none font-bold text-gray-900 mb-6 shadow-inner transition-all appearance-none">
                         <option value={UserRole.INSTRUCTOR}>FORMATEUR</option>
+                        <option value={UserRole.CABINET}>CABINET</option>
                         <option value={UserRole.EDITOR}>ÉDITEUR</option>
                         <option value={UserRole.ADMIN}>ADMINISTRATEUR</option>
                     </select>
@@ -255,7 +267,7 @@ const AdminPanel: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                             <div key={code.code} className="bg-white p-8 rounded-[32px] shadow-lg border border-gray-50 flex flex-col justify-between group hover:border-ivoryOrange transition-colors">
                                 <div>
                                     <div className="flex justify-between items-start mb-4">
-                                        <span className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest ${code.role === UserRole.ADMIN ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-blue-500'}`}>
+                                        <span className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest ${code.role === UserRole.ADMIN ? 'bg-red-50 text-red-500' : code.role === UserRole.CABINET ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-blue-500'}`}>
                                             {code.role}
                                         </span>
                                         <span className="text-[10px] font-bold text-gray-300">{new Date(code.createdAt).toLocaleDateString()}</span>
@@ -363,6 +375,14 @@ const AdminPanel: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                     </td>
                     <td className="px-6 py-6 md:px-12 md:py-10 text-right">
                       <div className="flex justify-end gap-4 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all md:transform md:translate-x-4 md:group-hover:translate-x-0">
+                        {canModerateInstructors && u.role === UserRole.INSTRUCTOR && (
+                          <button
+                            onClick={() => handleToggleInstructorValidation(u.id, !(u.isValidated === true))}
+                            className={`px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${u.isValidated === true ? 'bg-green-50 text-green-700 hover:bg-green-100' : 'bg-orange-50 text-orange-700 hover:bg-orange-100'}`}
+                          >
+                            {u.isValidated === true ? 'VALIDÉ' : 'EN ATTENTE'}
+                          </button>
+                        )}
                         <button onClick={() => { setEditingUser(u); setUserFormData(u); setShowUserModal(true); }} className="p-4 text-ivoryGreen hover:bg-ivoryGreen/10 rounded-2xl transition-all shadow-sm bg-white border border-gray-50"><Edit2 size={20} /></button>
                         <button onClick={() => setShowDeleteConfirm(u.id)} className="p-4 text-red-500 hover:bg-red-50 rounded-2xl transition-all shadow-sm bg-white border border-gray-50"><Trash2 size={20} /></button>
                       </div>
